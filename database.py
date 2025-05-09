@@ -75,6 +75,30 @@ def create_tables():
     finally:
         conn.close()
 
+def add_or_update_user(telegram_id: int, name: str):
+    """Adds a new user or updates the name if the user already exists."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Using INSERT OR IGNORE to only insert if the telegram_id doesn't exist.
+        # If you wanted to update the name if it changed, you might use
+        # INSERT INTO User (telegram_id, name) VALUES (?, ?)
+        # ON CONFLICT(telegram_id) DO UPDATE SET name=excluded.name;
+        # For now, just inserting if new is sufficient.
+        cursor.execute('''
+            INSERT OR IGNORE INTO User (telegram_id, name)
+            VALUES (?, ?)
+        ''', (telegram_id, name))
+        conn.commit()
+        if cursor.rowcount > 0:
+            logger.info(f"User {name} (ID: {telegram_id}) added to the database.")
+        else:
+            logger.info(f"User {name} (ID: {telegram_id}) already exists in the database.")
+    except sqlite3.Error as e:
+        logger.error(f"Database error when adding/updating user {telegram_id}: {e}")
+    finally:
+        conn.close()
+
 if __name__ == '__main__':
     # This allows running `python database.py` to initialize the database.
     logger.info(f"Initializing database '{DATABASE_NAME}'...")

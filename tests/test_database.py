@@ -11,7 +11,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from database import create_tables, get_db_connection, DATABASE_NAME as ACTUAL_DATABASE_NAME
+from database import create_tables, get_db_connection, add_or_update_user, DATABASE_NAME as ACTUAL_DATABASE_NAME
 
 TEST_DATABASE_NAME = 'test_palspantry.db'
 
@@ -99,3 +99,76 @@ def test_get_db_connection_uses_correct_database(setup_test_database):
     # For now, just ensure it creates the test DB file
     conn.close() # Close connection to allow file check
     assert os.path.exists(TEST_DATABASE_NAME), "Test database file was not created by get_db_connection."
+
+def test_add_new_user(setup_test_database):
+    """Tests adding a new user to the User table."""
+    create_tables() # Ensure tables are created in the test DB
+    
+    telegram_id = 12345
+    name = "Test User"
+    add_or_update_user(telegram_id, name)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT telegram_id, name FROM User WHERE telegram_id = ?", (telegram_id,))
+    user_record = cursor.fetchone()
+    conn.close()
+
+    assert user_record is not None, "User was not added to the database."
+    assert user_record['telegram_id'] == telegram_id
+    assert user_record['name'] == name
+
+def test_add_existing_user_does_not_duplicate_or_error(setup_test_database):
+    """Tests that attempting to add an existing user does not create a duplicate or raise an error."""
+    create_tables()
+
+    telegram_id = 67890
+    name = "Existing User"
+    
+    # Add user for the first time
+    add_or_update_user(telegram_id, name)
+    
+    # Attempt to add the same user again
+    add_or_update_user(telegram_id, name) # Should be ignored by INSERT OR IGNORE
+
+    # Attempt to add the same user with a different name (current logic ignores, doesn't update name)
+    add_or_update_user(telegram_id, "New Name For Existing User")
+
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM User WHERE telegram_id = ?", (telegram_id,))
+    count = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT name FROM User WHERE telegram_id = ?", (telegram_id,))
+    user_name_record = cursor.fetchone()['name']
+    conn.close()
+
+    assert count == 1, "User was duplicated or an error occurred."
+    assert user_name_record == name, "User's name was updated, but current logic should ignore."
+
+
+def test_add_or_update_user_different_users(setup_test_database):
+    """Tests adding multiple different users."""
+    create_tables()
+
+    user1_id = 111
+    user1_name = "User One"
+    add_or_update_user(user1_id, user1_name)
+
+    user2_id = 222
+    user2_name = "User Two"
+    add_or_update_user(user2_id, user2_name)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT name FROM User WHERE telegram_id = ?", (user1_id,))
+    record1 = cursor.fetchone()
+    cursor.execute("SELECT name FROM User WHERE telegram_id = ?", (user2_id,))
+    record2 = cursor.fetchone()
+    
+    conn.close()
+
+    assert record1 is not None and record1['name'] == user1_name
+    assert record2 is not None and record2['name'] == user2_name
