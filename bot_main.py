@@ -1,7 +1,7 @@
 import os
 from telegram.ext import Application, CommandHandler, ContextTypes, TypeHandler, MessageHandler, filters
 from telegram import Update
-from database import create_tables, add_or_update_user # Import create_tables and add_or_update_user
+from database import create_tables, add_or_update_user, get_all_products # Import create_tables, add_or_update_user, and get_all_products
 
 # Global variable to store the bot owner's user ID
 BOT_OWNER = None
@@ -28,13 +28,72 @@ async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     else:
         await update.message.reply_text("An owner has already been set.")
 
+async def add_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Adds a new product to the Product table. Only the bot owner can use this command."""
+    global BOT_OWNER
+    user_id = update.effective_user.id
+
+    if BOT_OWNER is None or user_id != BOT_OWNER:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+
+    try:
+        # Parse the command arguments
+        args = context.args
+        if len(args) < 3:
+            await update.message.reply_text("Usage: /add_product <name> <price> <category>")
+            return
+
+        name = args[0]
+        try:
+            price = float(args[1])
+        except ValueError:
+            await update.message.reply_text("Invalid price. Price must be a number.")
+            return
+        category = args[2]
+
+        # Add the product to the database
+        from database import add_product  # Import the add_product function
+        if add_product(name, price, category):
+            await update.message.reply_text(f"Product '{name}' added successfully.")
+        else:
+            await update.message.reply_text(f"Failed to add product '{name}'. Product with this name may already exist.")
+
+    except Exception as e:
+        await update.message.reply_text(f"An error occurred: {e}")
+
+async def list_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Lists all products in the Product table. Only the bot owner can use this command."""
+    global BOT_OWNER
+    user_id = update.effective_user.id
+
+    if BOT_OWNER is None or user_id != BOT_OWNER:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+
+    try:
+        products = get_all_products()
+        
+        if not products:
+            await update.message.reply_text("No products found.")
+            return
+
+        # Format the product list
+        product_list = "Current Products:\n"
+        for product in products:
+            product_list += f"- {product['name']} (ID: {product['id']}): ${product['price']:.2f} | Category: {product['category'] or 'N/A'}\n"
+        
+        await update.message.reply_text(product_list)
+
+    except Exception as e:
+        await update.message.reply_text(f"An error occurred: {e}")
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Sends a welcome message when the /start command is issued."""
     if update.effective_user:
         await update.message.reply_text(f"Hello {update.effective_user.first_name}! Welcome to Pal's Pantry Bot.")
     else:
         await update.message.reply_text("Hello! Welcome to Pal's Pantry Bot.")
-
 
 def main() -> None:
     """Start the bot."""
@@ -58,7 +117,9 @@ def main() -> None:
     # Add command handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("set_owner", set_owner))
-    
+    application.add_handler(CommandHandler("add_product", add_product))
+    application.add_handler(CommandHandler("list_products", list_products))
+
     # You might want a generic message handler for other interactions if needed
     # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, some_other_function))
 

@@ -172,3 +172,234 @@ def test_add_or_update_user_different_users(setup_test_database):
 
     assert record1 is not None and record1['name'] == user1_name
     assert record2 is not None and record2['name'] == user2_name
+
+def test_add_product_success(setup_test_database):
+    """Tests adding a new product to the Product table."""
+    from database import add_product
+    create_tables()  # Ensure tables are created in the test DB
+    
+    name = "Test Product"
+    price = 10.99
+    category = "Test Category"
+    
+    # Add a new product
+    result = add_product(name, price, category)
+    
+    # Verify the product was added successfully
+    assert result is True, "Product addition should return True on success"
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, price, category FROM Product WHERE name = ?", (name,))
+    product_record = cursor.fetchone()
+    conn.close()
+    
+    assert product_record is not None, "Product was not added to the database"
+    assert product_record['name'] == name
+    assert product_record['price'] == price
+    assert product_record['category'] == category
+
+def test_add_product_duplicate_name(setup_test_database):
+    """Tests that adding a product with a duplicate name fails."""
+    from database import add_product
+    create_tables()  # Ensure tables are created in the test DB
+    
+    name = "Duplicate Product"
+    price = 15.99
+    category = "Test Category"
+    
+    # Add a product for the first time
+    result1 = add_product(name, price, category)
+    assert result1 is True, "First product addition should succeed"
+    
+    # Attempt to add a product with the same name
+    result2 = add_product(name, 20.99, "Different Category")
+    assert result2 is False, "Adding a product with a duplicate name should return False"
+    
+    # Verify only one product with that name exists
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM Product WHERE name = ?", (name,))
+    count = cursor.fetchone()[0]
+    
+    # Verify the price and category were not updated
+    cursor.execute("SELECT price, category FROM Product WHERE name = ?", (name,))
+    product_record = cursor.fetchone()
+    conn.close()
+    
+    assert count == 1, "Only one product with the given name should exist"
+    assert product_record['price'] == price, "Price should not have been updated"
+    assert product_record['category'] == category, "Category should not have been updated"
+
+def test_add_product_without_category(setup_test_database):
+    """Tests adding a product without a category."""
+    from database import add_product
+    create_tables()  # Ensure tables are created in the test DB
+    
+    name = "No Category Product"
+    price = 5.99
+    
+    # Add a product without a category
+    result = add_product(name, price)
+    assert result is True, "Product addition without category should succeed"
+    
+    # Verify the product was added with a NULL category
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, price, category FROM Product WHERE name = ?", (name,))
+    product_record = cursor.fetchone()
+    conn.close()
+    
+    assert product_record is not None, "Product was not added to the database"
+    assert product_record['name'] == name
+    assert product_record['price'] == price
+    assert product_record['category'] is None, "Category should be NULL"
+    name = "Test User"
+    add_or_update_user(telegram_id, name)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT telegram_id, name FROM User WHERE telegram_id = ?", (telegram_id,))
+    user_record = cursor.fetchone()
+    conn.close()
+
+    assert user_record is not None, "User was not added to the database."
+    assert user_record['telegram_id'] == telegram_id
+    assert user_record['name'] == name
+
+def test_add_existing_user_does_not_duplicate_or_error(setup_test_database):
+    """Tests that attempting to add an existing user does not create a duplicate or raise an error."""
+    create_tables()
+
+    telegram_id = 67890
+    name = "Existing User"
+    
+    # Add user for the first time
+    add_or_update_user(telegram_id, name)
+    
+    # Attempt to add the same user again
+    add_or_update_user(telegram_id, name) # Should be ignored by INSERT OR IGNORE
+
+    # Attempt to add the same user with a different name (current logic ignores, doesn't update name)
+    add_or_update_user(telegram_id, "New Name For Existing User")
+
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM User WHERE telegram_id = ?", (telegram_id,))
+    count = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT name FROM User WHERE telegram_id = ?", (telegram_id,))
+    user_name_record = cursor.fetchone()['name']
+    conn.close()
+
+    assert count == 1, "User was duplicated or an error occurred."
+    assert user_name_record == name, "User's name was updated, but current logic should ignore."
+
+
+def test_add_or_update_user_different_users(setup_test_database):
+    """Tests adding multiple different users."""
+    create_tables()
+
+    user1_id = 111
+    user1_name = "User One"
+    add_or_update_user(user1_id, user1_name)
+
+    user2_id = 222
+    user2_name = "User Two"
+    add_or_update_user(user2_id, user2_name)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT name FROM User WHERE telegram_id = ?", (user1_id,))
+    record1 = cursor.fetchone()
+    cursor.execute("SELECT name FROM User WHERE telegram_id = ?", (user2_id,))
+    record2 = cursor.fetchone()
+    
+    conn.close()
+
+    assert record1 is not None and record1['name'] == user1_name
+    assert record2 is not None and record2['name'] == user2_name
+
+def test_add_product_success(setup_test_database):
+    """Tests adding a new product to the Product table."""
+    from database import add_product
+    create_tables()  # Ensure tables are created in the test DB
+    
+    name = "Test Product"
+    price = 10.99
+    category = "Test Category"
+    
+    # Add a new product
+    result = add_product(name, price, category)
+    
+    # Verify the product was added successfully
+    assert result is True, "Product addition should return True on success"
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, price, category FROM Product WHERE name = ?", (name,))
+    product_record = cursor.fetchone()
+    conn.close()
+    
+    assert product_record is not None, "Product was not added to the database"
+    assert product_record['name'] == name
+    assert product_record['price'] == price
+    assert product_record['category'] == category
+
+def test_add_product_duplicate_name(setup_test_database):
+    """Tests that adding a product with a duplicate name fails."""
+    from database import add_product
+    create_tables()  # Ensure tables are created in the test DB
+    
+    name = "Duplicate Product"
+    price = 15.99
+    category = "Test Category"
+    
+    # Add a product for the first time
+    result1 = add_product(name, price, category)
+    assert result1 is True, "First product addition should succeed"
+    
+    # Attempt to add a product with the same name
+    result2 = add_product(name, 20.99, "Different Category")
+    assert result2 is False, "Adding a product with a duplicate name should return False"
+    
+    # Verify only one product with that name exists
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM Product WHERE name = ?", (name,))
+    count = cursor.fetchone()[0]
+    
+    # Verify the price and category were not updated
+    cursor.execute("SELECT price, category FROM Product WHERE name = ?", (name,))
+    product_record = cursor.fetchone()
+    conn.close()
+    
+    assert count == 1, "Only one product with the given name should exist"
+    assert product_record['price'] == price, "Price should not have been updated"
+    assert product_record['category'] == category, "Category should not have been updated"
+
+def test_add_product_without_category(setup_test_database):
+    """Tests adding a product without a category."""
+    from database import add_product
+    create_tables()  # Ensure tables are created in the test DB
+    
+    name = "No Category Product"
+    price = 5.99
+    
+    # Add a product without a category
+    result = add_product(name, price)
+    assert result is True, "Product addition without category should succeed"
+    
+    # Verify the product was added with a NULL category
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, price, category FROM Product WHERE name = ?", (name,))
+    product_record = cursor.fetchone()
+    conn.close()
+    
+    assert product_record is not None, "Product was not added to the database"
+    assert product_record['name'] == name
+    assert product_record['price'] == price
+    assert product_record['category'] is None, "Category should be NULL"

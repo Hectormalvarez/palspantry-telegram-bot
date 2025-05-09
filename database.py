@@ -99,6 +99,41 @@ def add_or_update_user(telegram_id: int, name: str):
     finally:
         conn.close()
 
+def add_product(name: str, price: float, category: str = None):
+    """Adds a new product to the Product table."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO Product (name, price, category)
+            VALUES (?, ?, ?)
+        ''', (name, price, category))
+        conn.commit()
+        logger.info(f"Product '{name}' added with price {price} and category '{category}'.")
+        return True
+    except sqlite3.IntegrityError: # Handles UNIQUE constraint violation for name
+        logger.error(f"Database error: Product with name '{name}' already exists.")
+        return False
+    except sqlite3.Error as e:
+        logger.error(f"Database error when adding product '{name}': {e}")
+        return False
+    finally:
+        conn.close()
+
+def get_all_products():
+    """Retrieves all products from the Product table."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('SELECT id, name, price, category FROM Product')
+        products = cursor.fetchall()
+        return [dict(product) for product in products]
+    except sqlite3.Error as e:
+        logger.error(f"Database error when retrieving products: {e}")
+        return []
+    finally:
+        conn.close()
+
 if __name__ == '__main__':
     # This allows running `python database.py` to initialize the database.
     logger.info(f"Initializing database '{DATABASE_NAME}'...")

@@ -81,3 +81,57 @@ async def test_set_owner_command_works_correctly(mocker):
 
         # Check that the bot sends a message to the user that an owner has already been set
         new_update.message.reply_text.assert_called_once_with("An owner has already been set.")
+
+@pytest.mark.asyncio
+async def test_add_product_command(mocker):
+    """Assert that the /add_product command works correctly."""
+    # Mock the Update object
+    update = mocker.AsyncMock(spec=Update)
+    update.effective_user = mocker.MagicMock(spec=User)
+    update.message = mocker.AsyncMock()
+    update.message.reply_text = mocker.AsyncMock()
+
+    # Mock the Context object
+    context = mocker.AsyncMock()
+    context.args = ["Test Product", "10.0", "Test Category"]
+
+    # Test case 1: Unauthorized access
+    with unittest.mock.patch("bot_main.BOT_OWNER", new=67890):  # Mock a non-owner user ID
+        update.effective_user.id = 12345  # Mock a non-owner user ID
+        await bot_main.add_product(update, context)
+        update.message.reply_text.assert_called_once_with("You are not authorized to use this command.")
+        update.message.reply_text.reset_mock()
+
+    # Test case 2: Successful product addition
+    with unittest.mock.patch("bot_main.BOT_OWNER", new=12345):  # Mock the bot owner user ID
+        update.effective_user.id = 12345  # Mock the bot owner user ID
+        with unittest.mock.patch("database.add_product", return_value=True) as mock_add_product:
+            await bot_main.add_product(update, context)
+            mock_add_product.assert_called_once_with("Test Product", 10.0, "Test Category")
+            update.message.reply_text.assert_called_once_with("Product 'Test Product' added successfully.")
+            update.message.reply_text.reset_mock()
+
+    # Test case 3: Product already exists
+    with unittest.mock.patch("bot_main.BOT_OWNER", new=12345):  # Mock the bot owner user ID
+        update.effective_user.id = 12345  # Mock the bot owner user ID
+        with unittest.mock.patch("database.add_product", return_value=False) as mock_add_product:
+            await bot_main.add_product(update, context)
+            mock_add_product.assert_called_once_with("Test Product", 10.0, "Test Category")
+            update.message.reply_text.assert_called_once_with("Failed to add product 'Test Product'. Product with this name may already exist.")
+            update.message.reply_text.reset_mock()
+
+    # Test case 4: Invalid input (missing arguments)
+    with unittest.mock.patch("bot_main.BOT_OWNER", new=12345):  # Mock the bot owner user ID
+        update.effective_user.id = 12345  # Mock the bot owner user ID
+        context.args = ["Test Product", "10.0"]  # Missing category
+        await bot_main.add_product(update, context)
+        update.message.reply_text.assert_called_once_with("Usage: /add_product <name> <price> <category>")
+        update.message.reply_text.reset_mock()
+
+    # Test case 5: Invalid input (invalid price)
+    with unittest.mock.patch("bot_main.BOT_OWNER", new=12345):  # Mock the bot owner user ID
+        update.effective_user.id = 12345  # Mock the bot owner user ID
+        context.args = ["Test Product", "invalid_price", "Test Category"]
+        await bot_main.add_product(update, context)
+        update.message.reply_text.assert_called_once_with("Invalid price. Price must be a number.")
+        update.message.reply_text.reset_mock()
