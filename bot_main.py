@@ -1,6 +1,7 @@
 import os
 from telegram.ext import Application, CommandHandler, ContextTypes
 from telegram import Update
+from database import create_tables # Import create_tables
 
 # Global variable to store the bot owner's user ID
 BOT_OWNER = None
@@ -16,6 +17,9 @@ async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 def main() -> None:
     """Start the bot."""
+    # Initialize database tables
+    create_tables()
+
     # Get the bot token from the environment variable
     bot_token = os.environ.get("BOT_TOKEN")
 
