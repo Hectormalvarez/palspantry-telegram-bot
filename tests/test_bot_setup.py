@@ -69,12 +69,15 @@ async def test_set_owner_command_works_correctly(mocker):
         update.message.reply_text.assert_called_once_with("You are now the owner of this bot.")
 
         # Call the set_owner function again with a different user
-        update.effective_user = mocker.MagicMock(spec=User)
-        update.effective_user.id = 67890  # Mock a different user ID
-        await bot_main.set_owner(update, context)
+        new_update = mocker.AsyncMock(spec=Update)
+        new_update.effective_user = mocker.MagicMock(spec=User)
+        new_update.effective_user.id = 67890  # Mock a different user ID
+        new_update.message = mocker.AsyncMock()
+        new_update.message.reply_text = mocker.AsyncMock()
+        await bot_main.set_owner(new_update, context)
 
         # The bot owner should still be the first user
         assert bot_main.BOT_OWNER == 12345
 
         # Check that the bot sends a message to the user that an owner has already been set
-        update.message.reply_text.assert_called_with("An owner has already been set.")
+        new_update.message.reply_text.assert_called_once_with("An owner has already been set.")
