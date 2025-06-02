@@ -2,3 +2,4 @@ python-telegram-bot
 pytest
 pytest-asyncio
 pytest-mock
+python-dotenv
