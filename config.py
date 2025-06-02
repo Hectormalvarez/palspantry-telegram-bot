@@ -25,4 +25,5 @@ def setup_logging():
         level=LOG_LEVEL, format=LOG_FORMAT, handlers=[logging.StreamHandler()]
     )
 
+
 setup_logging()

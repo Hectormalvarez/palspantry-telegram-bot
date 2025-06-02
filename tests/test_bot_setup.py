@@ -1,122 +1,117 @@
+# FILE: tests/test_bot_setup.py
 import pytest
-from unittest import mock  # unittest.mock can be used alongside pytest-mock (mocker)
-from telegram import Bot, Update, User
-from telegram.ext import Application
+from unittest.mock import AsyncMock  # For type hinting fixture arguments
+from telegram import Update, User, Bot
+from telegram.ext import ApplicationBuilder
 
-# Import the module that contains BOT_OWNER and set_owner,
-# and also the module we need to patch for BOT_TOKEN
 import bot_main
-import config  # Important for patching
+from persistence.abstract_persistence import AbstractPantryPersistence
 
 
 @pytest.mark.asyncio
 async def test_bot_initializes_application_object(mocker):
     """Assert that the Telegram Application object can be initialized with a token."""
     test_token = "fake_test_token_for_init_test"
-
     mocker.patch("config.BOT_TOKEN", test_token)
 
-    application = Application.builder().token(test_token).build()
+    application = ApplicationBuilder().token(test_token).build()
+
     assert application is not None
-    assert application.bot is not None  # Check if the Bot object was created
-    assert isinstance(application.bot, Bot)  # Ensure it's the correct type
-    assert application.bot.token == test_token  # Check the token on the Bot object
+    assert application.bot is not None
+    assert isinstance(application.bot, Bot)
+    assert application.bot.token == test_token
 
 
 @pytest.mark.asyncio
-async def test_first_user_becomes_owner(mocker):
+async def test_first_user_becomes_owner(
+    mocker,
+    mock_update_message: Update,
+    mock_telegram_context: AsyncMock,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
     """Assert that the first user becomes the owner when no owner exists."""
-    # Reset BOT_OWNER in bot_main for this test case
-    with mock.patch("bot_main.BOT_OWNER", new=None):
-        # Mock the Update object
-        update = mocker.AsyncMock(spec=Update)
-        update.effective_user = mocker.MagicMock(spec=User)
-        update.effective_user.id = 12345  # Mock user ID
-        update.message = mocker.AsyncMock()
-        update.message.reply_text = mocker.AsyncMock()
+    mock_persistence_layer.is_owner_set.return_value = False
+    mock_persistence_layer.set_bot_owner.return_value = True
 
-        # Mock the Context object (though not explicitly used by set_owner, good practice)
-        context = mocker.AsyncMock()
+    user_id_to_set = 12345
+    mock_update_message.effective_user = mocker.MagicMock(spec=User, id=user_id_to_set)
 
-        # Initially, the bot owner should be None
-        assert bot_main.BOT_OWNER is None
+    await bot_main.set_owner(mock_update_message, mock_telegram_context)
 
-        # Call the set_owner function
-        await bot_main.set_owner(update, context)
-
-        # Now, the bot owner should be the user ID
-        assert bot_main.BOT_OWNER == 12345
-
-        # Check that the bot sends a message to the user
-        update.message.reply_text.assert_called_once_with(
-            "You are now the owner of this bot."
-        )
+    mock_persistence_layer.is_owner_set.assert_called_once()
+    mock_persistence_layer.set_bot_owner.assert_called_once_with(user_id_to_set)
+    mock_update_message.message.reply_text.assert_called_once_with(
+        "You are now the owner of this bot."
+    )
 
 
 @pytest.mark.asyncio
 async def test_set_owner_command_handles_owner_already_set(
     mocker,
-):  # Renamed for clarity
+    mock_update_message: Update,
+    mock_telegram_context: AsyncMock,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
     """Assert that /set_owner tells a user an owner is set if one exists."""
-    # Set an initial owner ID for this test case
     initial_owner_id = 12345
-    with mock.patch("bot_main.BOT_OWNER", new=initial_owner_id):
-        # Mock the Update object for a new user trying to set owner
-        update = mocker.AsyncMock(spec=Update)
-        update.effective_user = mocker.MagicMock(spec=User)
-        update.effective_user.id = 67890  # A different user ID
-        update.message = mocker.AsyncMock()
-        update.message.reply_text = mocker.AsyncMock()
+    mock_persistence_layer.is_owner_set.return_value = True
+    mock_persistence_layer.get_bot_owner.return_value = initial_owner_id
 
-        # Mock the Context object
-        context = mocker.AsyncMock()
+    mock_update_message.effective_user = mocker.MagicMock(spec=User, id=67890)
 
-        # The bot owner is already set
-        assert bot_main.BOT_OWNER == initial_owner_id
+    await bot_main.set_owner(mock_update_message, mock_telegram_context)
 
-        # Call the set_owner function by the new user
-        await bot_main.set_owner(update, context)
-
-        # The bot owner should still be the initial user
-        assert bot_main.BOT_OWNER == initial_owner_id
-
-        # Check that the bot sends the correct message
-        update.message.reply_text.assert_called_once_with(
-            "An owner has already been set."
-        )
+    mock_persistence_layer.is_owner_set.assert_called_once()
+    mock_persistence_layer.get_bot_owner.assert_called_once()
+    mock_persistence_layer.set_bot_owner.assert_not_called()
+    mock_update_message.message.reply_text.assert_called_once_with(
+        "An owner has already been set."
+    )
 
 
 @pytest.mark.asyncio
-async def test_set_owner_command_allows_first_user_and_rejects_second(mocker):
+async def test_set_owner_command_allows_first_user_and_rejects_second(
+    mocker,
+    mock_update_message: Update,
+    mock_telegram_context: AsyncMock,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
     """Asserts the full /set_owner logic: first user accepted, second rejected."""
-    # Ensure BOT_OWNER is None at the start of this test
-    with mock.patch("bot_main.BOT_OWNER", new=None) as mock_bot_owner_global:
-        # --- First User ---
-        update_user1 = mocker.AsyncMock(spec=Update)
-        update_user1.effective_user = mocker.MagicMock(spec=User)
-        update_user1.effective_user.id = 11111  # User 1 ID
-        update_user1.message = mocker.AsyncMock()
-        update_user1.message.reply_text = mocker.AsyncMock()
-        context1 = mocker.AsyncMock()
+    user1_id = 11111
+    user2_id = 22222
 
-        await bot_main.set_owner(update_user1, context1)
-        assert bot_main.BOT_OWNER == 11111  # Check global directly after call
-        update_user1.message.reply_text.assert_called_once_with(
-            "You are now the owner of this bot."
-        )
+    # --- First User Attempt ---
+    mock_persistence_layer.is_owner_set.return_value = False
+    mock_persistence_layer.set_bot_owner.return_value = True
 
-        # --- Second User ---
-        update_user2 = mocker.AsyncMock(spec=Update)
-        update_user2.effective_user = mocker.MagicMock(spec=User)
-        update_user2.effective_user.id = 22222  # User 2 ID
-        update_user2.message = mocker.AsyncMock()
-        update_user2.message.reply_text = (
-            mocker.AsyncMock()
-        )  # Fresh mock for reply_text
-        context2 = mocker.AsyncMock()
+    mock_update_message.effective_user = mocker.MagicMock(spec=User, id=user1_id)
+    mock_update_message.message.reply_text.reset_mock()
 
-        await bot_main.set_owner(update_user2, context2)
-        assert bot_main.BOT_OWNER == 11111  # Owner should NOT have changed
-        update_user2.message.reply_text.assert_called_once_with(
-            "An owner has already been set."
-        )
+    await bot_main.set_owner(mock_update_message, mock_telegram_context)
+
+    mock_persistence_layer.is_owner_set.assert_called_once()
+    mock_persistence_layer.set_bot_owner.assert_called_once_with(user1_id)
+    mock_update_message.message.reply_text.assert_called_once_with(
+        "You are now the owner of this bot."
+    )
+
+    # --- Second User Attempt ---
+    mock_persistence_layer.is_owner_set.return_value = True
+    mock_persistence_layer.get_bot_owner.return_value = user1_id
+    mock_persistence_layer.is_owner_set.reset_mock()  # Reset for this specific call check
+    mock_persistence_layer.get_bot_owner.reset_mock()  # Reset for this specific call check
+    # set_bot_owner's call_count is cumulative and should remain 1
+
+    mock_update_message.effective_user = mocker.MagicMock(spec=User, id=user2_id)
+    mock_update_message.message.reply_text.reset_mock()
+
+    await bot_main.set_owner(mock_update_message, mock_telegram_context)
+
+    mock_persistence_layer.is_owner_set.assert_called_once()
+    mock_persistence_layer.get_bot_owner.assert_called_once()
+    assert (
+        mock_persistence_layer.set_bot_owner.call_count == 1
+    )  # Still only called once in total
+    mock_update_message.message.reply_text.assert_called_once_with(
+        "An owner has already been set."
+    )
