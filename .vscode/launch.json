@@ -1,0 +1,17 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: PalsPantry Bot",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/bot_main.py", // Path to your main script
+            "console": "integratedTerminal",          // Shows output in VS Code's terminal
+            "envFile": "${workspaceFolder}/.env",     // Loads environment variables from your .env file
+            "justMyCode": true                        // Set to false to step into library code
+        }
+    ]
+}
