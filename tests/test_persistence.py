@@ -1,6 +1,6 @@
 import pytest
 from persistence.in_memory_persistence import InMemoryPersistence
-from typing import Any # For type hinting
+from typing import Any  # For type hinting
 
 
 @pytest.mark.asyncio
@@ -93,7 +93,6 @@ async def test_in_memory_persistence_get_bot_owner_transitions():
     assert (
         await persistence.get_bot_owner() == owner_id
     ), "get_bot_owner returns correct ID after setting owner"
-
 
 
 def _create_sample_product_data(

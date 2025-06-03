@@ -29,6 +29,7 @@ PRODUCT_DESCRIPTION = 1  # State for receiving the product description
 PRODUCT_PRICE = 2  # State for receiving the product price
 PRODUCT_QUANTITY = 3  # For receiving product quantity
 PRODUCT_CATEGORY = 4  # Placeholder for the state after quantity
+PRODUCT_CONFIRMATION = 5
 # ... other states later
 
 
@@ -244,7 +245,7 @@ async def received_product_quantity(
 
         await update.message.reply_text(
             f"Quantity set to {quantity}.\n\n"
-            "Next, please specify a category for this product. (Category step not fully implemented yet)."
+            "Next, please specify a category for this product."
         )
         return PRODUCT_CATEGORY
 
@@ -258,6 +259,44 @@ async def received_product_quantity(
             "Please enter a whole positive number (e.g., 10), or type /cancel."
         )
         return PRODUCT_QUANTITY
+
+
+async def received_product_category(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """
+    Stores product category (text input for now) and transitions to confirmation.
+    """
+    category_name = update.message.text
+    product_data = context.user_data.get("new_product", {})
+    product_name_for_log = product_data.get("name", "the product")
+
+    if not category_name or not category_name.strip():
+        logger.warning(
+            f"Empty category input for '{product_name_for_log}' from owner {update.effective_user.id}."
+        )
+        await update.message.reply_text(
+            "Category name cannot be empty. Please enter a category, or type /cancel."
+        )
+        return PRODUCT_CATEGORY  # Stay in the same state
+
+    # For now, we just take the text. We can add existing category selection later.
+    normalized_category = category_name.strip()
+    product_data["category"] = normalized_category
+
+    logger.info(
+        f"Received product category: '{normalized_category}' for '{product_name_for_log}' "
+        f"from owner {update.effective_user.id}."
+    )
+
+    await update.message.reply_text(
+        f"Category set to '{normalized_category}'.\n\n"
+        "Let's review the product details before saving. (Confirmation step not fully implemented yet)."  # Placeholder for confirmation
+    )
+    # For this step, we end the conversation here to test incrementally if needed,
+    # OR directly transition if the confirmation step's handler is also being stubbed.
+    # Let's plan to transition to PRODUCT_CONFIRMATION.
+    return PRODUCT_CONFIRMATION
 
 
 async def cancel_add_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -311,6 +350,11 @@ def main() -> None:
             PRODUCT_QUANTITY: [
                 MessageHandler(
                     filters.TEXT & ~filters.COMMAND, received_product_quantity
+                )
+            ],
+            PRODUCT_CATEGORY: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, received_product_category
                 )
             ],
         },

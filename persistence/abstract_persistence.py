@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any # For type hinting list[dict[str, Any]]
+from typing import Any  # For type hinting list[dict[str, Any]]
 
 
 class AbstractPantryPersistence(ABC):
@@ -42,7 +42,6 @@ class AbstractPantryPersistence(ABC):
         """
         pass
 
-
     # --- Product Management Methods ---
     @abstractmethod
     async def add_product(self, product_data: dict[str, Any]) -> str | None:
@@ -84,7 +83,9 @@ class AbstractPantryPersistence(ABC):
         pass
 
     @abstractmethod
-    async def get_products_by_category(self, category_name: str) -> list[dict[str, Any]]:
+    async def get_products_by_category(
+        self, category_name: str
+    ) -> list[dict[str, Any]]:
         """
         Retrieves all products belonging to a specific category.
 
@@ -95,7 +96,7 @@ class AbstractPantryPersistence(ABC):
             list[dict[str, Any]]: A list of products in that category.
         """
         pass
-    
+
     @abstractmethod
     async def get_all_categories(self) -> list[str]:
         """
@@ -107,7 +108,9 @@ class AbstractPantryPersistence(ABC):
         pass
 
     @abstractmethod
-    async def update_product(self, product_id: str, product_data: dict[str, Any]) -> bool:
+    async def update_product(
+        self, product_id: str, product_data: dict[str, Any]
+    ) -> bool:
         """
         Updates an existing product.
 
@@ -134,7 +137,9 @@ class AbstractPantryPersistence(ABC):
         pass
 
     @abstractmethod
-    async def update_product_stock(self, product_id: str, quantity_change: int) -> int | None:
+    async def update_product_stock(
+        self, product_id: str, quantity_change: int
+    ) -> int | None:
         """
         Updates the stock quantity of a product.
         A positive quantity_change increases stock, negative decreases.
