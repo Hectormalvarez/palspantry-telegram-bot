@@ -179,33 +179,37 @@ async def test_received_product_description_invalid_empty(
 
 # --- Tests for received_product_price ---
 @pytest.mark.asyncio
-async def test_received_product_price_valid(
+async def test_received_product_price_valid_asks_for_quantity( # Renamed
     mocker,
     mock_update_message: Update,
-    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE
 ):
-    """Test receiving a valid product price."""
+    """
+    Test that after receiving a valid product price, the bot asks for quantity
+    and transitions to the PRODUCT_QUANTITY state, and user_data is preserved.
+    """
+    # Setup: Simulate that name and description are already in user_data
     mock_telegram_context.user_data = {
-        "new_product": {"name": "Test Widget", "description": "Test Desc"}
+        'new_product': {'name': 'Test Widget', 'description': 'A cool gadget.'}
     }
-    price_str = "19.99"
-    expected_price_float = 19.99
+    price_str = "25.50"
+    expected_price_float = 25.50
     mock_update_message.message.text = price_str
-    mock_update_message.effective_user = mocker.MagicMock(spec=User, id=123)
+    mock_update_message.effective_user = mocker.MagicMock(spec=User, id=12345) # Owner ID
 
-    next_state = await bot_main.received_product_price(
-        mock_update_message, mock_telegram_context
-    )
+    # Action: Call the handler
+    next_state = await bot_main.received_product_price(mock_update_message, mock_telegram_context)
 
-    assert next_state == ConversationHandler.END  # Current implementation ends here
-    # Price was stored, then new_product was deleted.
-    # We check the reply_text to confirm price was processed.
+    # Assert: New expected behavior
+    assert next_state == bot_main.PRODUCT_QUANTITY, "Should transition to PRODUCT_QUANTITY"
+    
+    assert 'new_product' in mock_telegram_context.user_data, "new_product data should be preserved"
+    assert mock_telegram_context.user_data['new_product'].get('price') == expected_price_float, "Price should be stored"
+    
     mock_update_message.message.reply_text.assert_called_once_with(
         f"Price set to {expected_price_float:.2f}.\n\n"
-        "Next, we'll ask for the quantity. (Quantity step not implemented yet)."
+        "Now, how many units of this product are available? Please enter a whole number (e.g., 10)." # New prompt
     )
-    # Assert that new_product was cleaned up from user_data as per current handler logic
-    assert "new_product" not in mock_telegram_context.user_data
 
 
 @pytest.mark.asyncio

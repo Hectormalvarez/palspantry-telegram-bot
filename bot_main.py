@@ -27,7 +27,9 @@ logger = logging.getLogger(__name__)
 PRODUCT_NAME = 0  # State for receiving the product name
 PRODUCT_DESCRIPTION = 1  # State for receiving the product description
 PRODUCT_PRICE = 2  # State for receiving the product price
-# We'll add more states like PRODUCT_QUANTITY etc. later
+PRODUCT_QUANTITY = 3  # For receiving product quantity
+PRODUCT_CATEGORY = 4  # Placeholder for the state after quantity
+# ... other states later
 
 
 async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -109,7 +111,7 @@ async def add_product_start(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def received_product_name(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    """Stores the product name and ends the conversation (for now)."""
+    """Stores the product name and asks for product description."""
     product_name = update.message.text
 
     if not product_name or len(product_name.strip()) == 0:
@@ -133,7 +135,7 @@ async def received_product_name(
 async def received_product_description(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    """Stores product description and (for now) ends the conversation, preparing for price."""
+    """Stores product description and asks for the product price."""
     product_description = update.message.text
 
     if not product_description or len(product_description.strip()) == 0:
@@ -160,8 +162,7 @@ async def received_product_price(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """
-    Stores product price (after validation) and, for this incremental step,
-    ends the conversation with a placeholder for the next step (quantity).
+    Stores product price after validation and asks for the product quantity.
     """
     price_text = update.message.text
     converted_price: float | None = None  # Initialize to None
@@ -197,16 +198,43 @@ async def received_product_price(
     )
 
     await update.message.reply_text(
-        f"Price set to {converted_price:.2f}.\n\n"  # Format to 2 decimal places
-        "Next, we'll ask for the quantity. (Quantity step not implemented yet)."  # Placeholder
+        f"Price set to {converted_price:.2f}.\n\n"
+        "Now, how many units of this product are available? Please enter a whole number (e.g., 10)."
     )
 
-    # For this incremental step, we end the conversation here.
-    # Later, this will return PRODUCT_QUANTITY.
+    # Transition to the PRODUCT_QUANTITY state
+    logger.debug(f"Product data so far: {context.user_data['new_product']}")
+    # Do NOT delete new_product here, as it's needed for the next step
+    return PRODUCT_QUANTITY
+
+
+async def received_product_quantity(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """
+    Receives product quantity input and ends the conversation.
+    Will be extended in future to handle category input.
+    """
+    quantity_text = update.message.text  # We're not validating or storing it yet
+    product_name = context.user_data.get("new_product", {}).get("name", "the product")
+    logger.info(
+        f"Reached quantity step for '{product_name}'. Received input: '{quantity_text}'. "
+        f"Owner: {update.effective_user.id}. Full quantity logic not yet implemented."
+    )
+
+    await update.message.reply_text(
+        f"Quantity input '{quantity_text}' noted for '{product_name}'.\n\n"
+        "Next, we'll ask for the category. (Category step not implemented yet)."  # Placeholder
+    )
+
+    # For this incremental stub, we end the conversation here.
+    # Later, this will validate, store quantity, and return PRODUCT_CATEGORY.
     if "new_product" in context.user_data:
-        logger.debug(f"Product data so far: {context.user_data['new_product']}")
-        del context.user_data["new_product"]  # Clean up temporary data
-    return ConversationHandler.END
+        logger.debug(
+            f"Product data before ending at quantity stub: {context.user_data['new_product']}"
+        )
+        # Let's keep user_data for now, as the next TDD step will populate quantity in it.
+    return ConversationHandler.END  # Placeholder end
 
 
 async def cancel_add_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -251,7 +279,12 @@ def main() -> None:
             ],
             PRODUCT_PRICE: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_price)
-            ]
+            ],
+            PRODUCT_QUANTITY: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, received_product_quantity
+                )
+            ],
         },
         fallbacks=[CommandHandler("cancel", cancel_add_product)],
     )
