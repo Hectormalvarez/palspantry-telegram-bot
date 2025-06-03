@@ -262,6 +262,75 @@ async def test_received_product_price_invalid_zero_or_negative(
     assert "price" not in mock_telegram_context.user_data["new_product"]
 
 
+@pytest.mark.asyncio
+async def test_received_product_quantity_valid(
+    mocker,
+    mock_update_message: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE
+):
+    """Test receiving a valid product quantity."""
+    # Setup: Simulate that name, description, and price are already in user_data
+    mock_telegram_context.user_data = {
+        'new_product': {'name': 'Test Widget', 'description': 'Test Desc', 'price': 19.99}
+    }
+    quantity_str = "25"
+    expected_quantity_int = 25
+    mock_update_message.message.text = quantity_str
+    # Add effective_user for logging or other context needs if your handler uses it
+    mock_update_message.effective_user = mocker.MagicMock(spec=User, id=12345) 
+
+    # Action: This function bot_main.received_product_quantity doesn't fully exist or is a stub,
+    # so this test (or parts of it) will fail.
+    next_state = await bot_main.received_product_quantity(mock_update_message, mock_telegram_context)
+
+    # Assert: Expected behavior for the *final* version of received_product_quantity
+    assert next_state == bot_main.PRODUCT_CATEGORY 
+    assert mock_telegram_context.user_data['new_product']['quantity'] == expected_quantity_int
+    mock_update_message.message.reply_text.assert_called_once_with(
+        f"Quantity set to {expected_quantity_int}.\n\n"
+        "Next, please specify a category for this product. (Category step not fully implemented yet)." # Placeholder for category prompt
+    )
+    assert 'quantity' in mock_telegram_context.user_data['new_product'] # Ensure quantity was stored
+    assert 'price' in mock_telegram_context.user_data['new_product'] # Ensure previous data is preserved
+
+
+@pytest.mark.parametrize(
+    "invalid_quantity_input, case_description",
+    [
+        ("abc", "non-integer string"),
+        ("10.5", "float string"),
+        ("0", "zero value"),
+        ("-5", "negative value"),
+        ("", "empty string"),
+        ("   ", "whitespace only")
+    ]
+)
+@pytest.mark.asyncio
+async def test_received_product_quantity_invalid_inputs(
+    mocker,
+    mock_update_message: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    invalid_quantity_input: str,
+    case_description: str # For pytest output clarity
+):
+    """Test receiving various invalid product quantities."""
+    mock_telegram_context.user_data = {
+        'new_product': {'name': 'Test Widget', 'description': 'Test Desc', 'price': 19.99}
+    }
+    mock_update_message.message.text = invalid_quantity_input
+    mock_update_message.effective_user = mocker.MagicMock(spec=User, id=12345)
+
+    next_state = await bot_main.received_product_quantity(mock_update_message, mock_telegram_context)
+
+    assert next_state == bot_main.PRODUCT_QUANTITY # Should stay in the same state to re-prompt
+    mock_update_message.message.reply_text.assert_called_once_with(
+        "That doesn't look like a valid quantity. "
+        "Please enter a whole positive number (e.g., 10), or type /cancel."
+    )
+    # Ensure quantity was not added or was not incorrectly processed
+    assert 'quantity' not in mock_telegram_context.user_data.get('new_product', {})
+
+
 # --- Tests for cancel_add_product ---
 @pytest.mark.asyncio
 async def test_cancel_add_product_with_data(

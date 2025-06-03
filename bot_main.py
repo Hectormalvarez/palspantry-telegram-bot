@@ -212,29 +212,52 @@ async def received_product_quantity(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """
-    Receives product quantity input and ends the conversation.
-    Will be extended in future to handle category input.
+    Stores product quantity (after validation) and transitions to asking for category.
     """
-    quantity_text = update.message.text  # We're not validating or storing it yet
+    quantity_text = update.message.text
     product_name = context.user_data.get("new_product", {}).get("name", "the product")
-    logger.info(
-        f"Reached quantity step for '{product_name}'. Received input: '{quantity_text}'. "
-        f"Owner: {update.effective_user.id}. Full quantity logic not yet implemented."
-    )
 
-    await update.message.reply_text(
-        f"Quantity input '{quantity_text}' noted for '{product_name}'.\n\n"
-        "Next, we'll ask for the category. (Category step not implemented yet)."  # Placeholder
-    )
+    # Try to convert and validate in one go
+    try:
+        # The .strip() is important if you want to treat "   " as potentially invalid before int()
+        # or allow int(" 5 ") to work. int() can handle leading/trailing whitespace.
+        if (
+            not quantity_text or not quantity_text.strip()
+        ):  # Explicitly catch empty/whitespace first if desired for logging
+            logger.warning(
+                f"Empty quantity input for '{product_name}' from owner {update.effective_user.id}."
+            )
+            # Let it fall through to the ValueError or a specific check, or handle here
+            # For a unified message, we let the int conversion or value check fail.
 
-    # For this incremental stub, we end the conversation here.
-    # Later, this will validate, store quantity, and return PRODUCT_CATEGORY.
-    if "new_product" in context.user_data:
-        logger.debug(
-            f"Product data before ending at quantity stub: {context.user_data['new_product']}"
+        quantity = int(quantity_text)  # Try to convert to int
+        if quantity <= 0:
+            # This will be caught by the generic ValueError message below
+            # if we don't have a specific message for "positive"
+            raise ValueError("Quantity must be a positive integer.")
+
+        context.user_data["new_product"]["quantity"] = quantity
+        logger.info(
+            f"Received product quantity: {quantity} for '{product_name}' "
+            f"from owner {update.effective_user.id}."
         )
-        # Let's keep user_data for now, as the next TDD step will populate quantity in it.
-    return ConversationHandler.END  # Placeholder end
+
+        await update.message.reply_text(
+            f"Quantity set to {quantity}.\n\n"
+            "Next, please specify a category for this product. (Category step not fully implemented yet)."
+        )
+        return PRODUCT_CATEGORY
+
+    except ValueError:  # Catches int() conversion errors and quantity <= 0
+        logger.warning(
+            f"Invalid quantity input: '{quantity_text}' for '{product_name}' "
+            f"from owner {update.effective_user.id}."
+        )
+        await update.message.reply_text(  # This is the unified message your test expects
+            "That doesn't look like a valid quantity. "
+            "Please enter a whole positive number (e.g., 10), or type /cancel."
+        )
+        return PRODUCT_QUANTITY
 
 
 async def cancel_add_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -279,6 +302,11 @@ def main() -> None:
             ],
             PRODUCT_PRICE: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_price)
+            ],
+            PRODUCT_QUANTITY: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, received_product_quantity
+                )
             ],
             PRODUCT_QUANTITY: [
                 MessageHandler(
