@@ -16,26 +16,24 @@ import config
 from persistence.in_memory_persistence import InMemoryPersistence
 from persistence.abstract_persistence import (
     AbstractPantryPersistence,
-)  # For type hinting if needed
+)  # For type hinting
 
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
 
-# REMOVE the global BOT_OWNER variable
-# BOT_OWNER = None # No longer needed here
 
-
-# --- Conversation States for Adding a Product (Minimal for now) ---
+# --- Conversation States for Adding a Product (In Progress) ---
 PRODUCT_NAME = 0  # State for receiving the product name
-# We'll add more states like PRODUCT_DESCRIPTION, PRODUCT_PRICE etc. later
+PRODUCT_DESCRIPTION = 1  # State for receiving the product description
+# We'll add more states like PRODUCT_PRICE, PRODUCT_QUANTITY etc. later
 
 
 async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Access the persistence instance from bot_data
     # We'll ensure it's put there in the main() function
-    persistence: AbstractPantryPersistence = context.bot_data['persistence']
-    
+    persistence: AbstractPantryPersistence = context.bot_data["persistence"]
+
     user_id = update.effective_user.id
     username = update.effective_user.username or "N/A"
 
@@ -75,7 +73,7 @@ async def owner_only_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> bool:
     """Helper to check if the user is the bot owner."""
-    persistence: AbstractPantryPersistence = context.bot_data['persistence']
+    persistence: AbstractPantryPersistence = context.bot_data["persistence"]
     owner_id = await persistence.get_bot_owner()
     if not owner_id or update.effective_user.id != owner_id:
         if update.message:  # Check if update.message exists
@@ -89,6 +87,7 @@ async def owner_only_command(
     return True
 
 
+# --- Start Add Product Conversation Handlers ---
 async def add_product_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Starts the product addition conversation by asking for the product name."""
     if not await owner_only_command(update, context):
@@ -124,22 +123,49 @@ async def received_product_name(
     )
 
     await update.message.reply_text(
-        f"Product name '{product_name}' received. "
-        "More steps to add description, price, etc., will be implemented next!"
+        f"Great! Product name is '{product_name}'.\n\n"
+        "Now, please enter a description for the product."  # <-- Ask for description
     )
-    # For this first simple step, we end the conversation here.
-    # Later, this will return the next state (e.g., PRODUCT_DESCRIPTION).
-    # Clean up temporary data if ending here.
-    if "new_product" in context.user_data:
+    return PRODUCT_DESCRIPTION  # <-- TRANSITION TO NEW STATE
+
+
+async def received_product_description(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """Stores product description and (for now) ends the conversation, preparing for price."""
+    product_description = update.message.text
+
+    if not product_description or len(product_description.strip()) == 0:
+        await update.message.reply_text(
+            "Product description cannot be empty. Please enter a description, or type /cancel to exit."
+        )
+        return PRODUCT_DESCRIPTION  # Stay in the same state, ask for description again
+
+    context.user_data["new_product"]["description"] = product_description.strip()
+    logger.info(
+        f"Received product description for '{context.user_data['new_product']['name']}' "
+        f"from owner {update.effective_user.id}. Description: '{product_description[:30]}...'"
+    )
+
+    await update.message.reply_text(
+        f"Description noted. "
+        "Next, we'll ask for the price. (Price step not implemented yet)."  # Placeholder message
+    )
+    # For this step, we end the conversation here to test incrementally.
+    # Later, this will return PRODUCT_PRICE.
+    if "new_product" in context.user_data:  # Clean up for this incremental step
+        logger.debug(f"Product data so far: {context.user_data['new_product']}")
         del context.user_data["new_product"]
     return ConversationHandler.END
 
 
 async def cancel_add_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancels and ends the product addition conversation."""
-    if 'new_product' in context.user_data:
-        logger.info(f"Cancelling product addition. Cleared data: {context.user_data['new_product']}")
-        del context.user_data['new_product'] # Clean up any partially collected data
+    if "new_product" in context.user_data:
+        logger.info(
+            f"Cancelling product addition. Cleared data: {context.user_data['new_product']}"
+        )
+        del context.user_data["new_product"]  # Clean up any partially collected data
     else:
         logger.info("Product addition cancelled before any data was stored.")
 
@@ -157,21 +183,24 @@ def main() -> None:
     persistence_instance = InMemoryPersistence()
 
     # Use ApplicationBuilder for more explicit setup
-    application = (
-        ApplicationBuilder()
-        .token(config.BOT_TOKEN)
-        .build()
-    )
-    
-    application.bot_data['persistence'] = persistence_instance
-    
-    # Conversation handler for adding products (minimal first step)
+    application = ApplicationBuilder().token(config.BOT_TOKEN).build()
+
+    application.bot_data["persistence"] = persistence_instance
+
+    # Conversation handler for adding products
     add_product_conv_handler = ConversationHandler(
         entry_points=[CommandHandler("addproduct", add_product_start)],
         states={
-            PRODUCT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_name)],
+            PRODUCT_NAME: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_name),
+            ],
+            PRODUCT_DESCRIPTION: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, received_product_description
+                )
+            ],
         },
-        fallbacks=[CommandHandler("cancel", cancel_add_product)], 
+        fallbacks=[CommandHandler("cancel", cancel_add_product)],
     )
 
     # Add command handler
