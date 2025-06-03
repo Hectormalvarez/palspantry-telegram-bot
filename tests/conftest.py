@@ -31,7 +31,7 @@ def mock_telegram_context(
     # For a generic mock, spec=ContextTypes might be more direct if DEFAULT_TYPE is complex.
     # However, ContextTypes.DEFAULT_TYPE should work if that's what your handlers expect.
     context = mocker.AsyncMock(spec=ContextTypes.DEFAULT_TYPE)
-    context.application_data = {"persistence": mock_persistence_layer}
+    context.bot_data = {"persistence": mock_persistence_layer}
     return context
 
 
