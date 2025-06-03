@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 # --- Conversation States for Adding a Product (In Progress) ---
 PRODUCT_NAME = 0  # State for receiving the product name
 PRODUCT_DESCRIPTION = 1  # State for receiving the product description
-# We'll add more states like PRODUCT_PRICE, PRODUCT_QUANTITY etc. later
+PRODUCT_PRICE = 2  # State for receiving the product price
+# We'll add more states like PRODUCT_QUANTITY etc. later
 
 
 async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -148,14 +149,63 @@ async def received_product_description(
     )
 
     await update.message.reply_text(
-        f"Description noted. "
-        "Next, we'll ask for the price. (Price step not implemented yet)."  # Placeholder message
+        f"Description noted.\n\n"
+        "Now, what's the price for this product? Please enter a number (e.g., 10.99 or 5)."  # Ask for price
     )
-    # For this step, we end the conversation here to test incrementally.
-    # Later, this will return PRODUCT_PRICE.
-    if "new_product" in context.user_data:  # Clean up for this incremental step
+
+    return PRODUCT_PRICE  # <--(no longer ends conversation here)
+
+
+async def received_product_price(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """
+    Stores product price (after validation) and, for this incremental step,
+    ends the conversation with a placeholder for the next step (quantity).
+    """
+    price_text = update.message.text
+    converted_price: float | None = None  # Initialize to None
+
+    # Attempt to convert the input text to a float
+    if price_text:  # Check if text is not None or empty before trying to convert
+        try:
+            converted_price = float(price_text)
+        except ValueError:
+            # If float(price_text) raises a ValueError (e.g., for "abc"),
+            # converted_price will remain None.
+            logger.debug(f"Price input '{price_text}' could not be converted to float.")
+            pass  # We'll handle the None case in the if block below
+
+    # Now, validate the converted_price (it must be a number and positive)
+    if converted_price is None or converted_price <= 0:
+        logger.warning(
+            f"Invalid price input: '{price_text}' (converted: {converted_price}) "
+            f"from owner {update.effective_user.id}."
+        )
+        await update.message.reply_text(
+            "That doesn't look like a valid price. "
+            "Please enter a positive number (e.g., 10.99 or 5), or type /cancel."
+        )
+        return PRODUCT_PRICE  # Stay in the same state to re-collect price
+
+    # If we reach here, the price is valid
+    context.user_data["new_product"]["price"] = converted_price
+    product_name = context.user_data["new_product"].get("name", "the product")
+    logger.info(
+        f"Received product price: {converted_price} for '{product_name}' "
+        f"from owner {update.effective_user.id}."
+    )
+
+    await update.message.reply_text(
+        f"Price set to {converted_price:.2f}.\n\n"  # Format to 2 decimal places
+        "Next, we'll ask for the quantity. (Quantity step not implemented yet)."  # Placeholder
+    )
+
+    # For this incremental step, we end the conversation here.
+    # Later, this will return PRODUCT_QUANTITY.
+    if "new_product" in context.user_data:
         logger.debug(f"Product data so far: {context.user_data['new_product']}")
-        del context.user_data["new_product"]
+        del context.user_data["new_product"]  # Clean up temporary data
     return ConversationHandler.END
 
 
@@ -199,6 +249,9 @@ def main() -> None:
                     filters.TEXT & ~filters.COMMAND, received_product_description
                 )
             ],
+            PRODUCT_PRICE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_price)
+            ]
         },
         fallbacks=[CommandHandler("cancel", cancel_add_product)],
     )
