@@ -55,7 +55,7 @@ class InMemoryPersistence(AbstractPantryPersistence):
 
         # Ensure essential fields exist, though ConversationHandler should gather them
         if not all(
-            k in product_data for k in ["name", "price", "quantity", "category"]
+            k in product_data for k in ["name", "description", "price", "quantity", "category"]
         ):
             logger.error(
                 f"Missing essential product data for add_product: {product_data}"

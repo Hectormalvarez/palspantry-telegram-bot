@@ -332,12 +332,44 @@ async def handle_product_save_confirmed(
 ) -> int:
     query = update.callback_query
     await query.answer()  # Important to answer callback queries
-    await query.edit_message_text(
-        text="Product saving not implemented yet. Conversation ended."
-    )
-    logger.info("Placeholder: Product save confirmed.")
+
+    persistence: AbstractPantryPersistence = context.bot_data["persistence"]
+    product_data = context.user_data.get("new_product")
+    product_name = product_data.get("name", "the product")
+
+    if not product_data:
+        logger.error(
+            f"User {update.effective_user.id} tried to save product but 'new_product' data was missing."
+        )
+        await query.edit_message_text(
+            "An error occurred: Product data not found. Please try adding the product again."
+        )
+        return ConversationHandler.END
+
+    product_id = await persistence.add_product(product_data)
+
+    if product_id:
+        success_message = (
+            f"✅ Product '{product_name}' (ID: {product_id}) has been successfully added!"
+        )
+        logger.info(
+            f"Product '{product_name}' (ID: {product_id}) saved by owner {update.effective_user.id}."
+        )
+        await query.edit_message_text(text=success_message)
+    else:
+        failure_message = (
+            f"❌ Failed to add product '{product_name}'. Please try again later."
+        )
+        logger.error(
+            f"Failed to save product '{product_name}' for owner {update.effective_user.id}."
+        )
+        await query.edit_message_text(text=failure_message)
+
+    # Clear the temporary product data
     if "new_product" in context.user_data:
         del context.user_data["new_product"]
+        logger.debug("Cleared 'new_product' from user_data.")
+
     return ConversationHandler.END
 
 
