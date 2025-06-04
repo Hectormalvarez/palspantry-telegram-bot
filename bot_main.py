@@ -1,5 +1,10 @@
 import logging
-from telegram import Update, ReplyKeyboardRemove
+from telegram import (
+    Update,
+    ReplyKeyboardRemove,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 from telegram.ext import (
     CommandHandler,
     ContextTypes,
@@ -7,6 +12,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
     ConversationHandler,
+    CallbackQueryHandler,
 )
 
 # Import configuration (this will also initialize logging)
@@ -267,11 +273,11 @@ async def received_product_category(
     """
     Stores product category (text input for now) and transitions to confirmation.
     """
-    category_name = update.message.text
-    product_data = context.user_data.get("new_product", {})
-    product_name_for_log = product_data.get("name", "the product")
+    category_name_input = update.message.text
+    user_product_data = context.user_data.get("new_product", {})  # More robust get
+    product_name_for_log = user_product_data.get("name", "the product")
 
-    if not category_name or not category_name.strip():
+    if not category_name_input or not category_name_input.strip():
         logger.warning(
             f"Empty category input for '{product_name_for_log}' from owner {update.effective_user.id}."
         )
@@ -280,23 +286,95 @@ async def received_product_category(
         )
         return PRODUCT_CATEGORY  # Stay in the same state
 
-    # For now, we just take the text. We can add existing category selection later.
-    normalized_category = category_name.strip()
-    product_data["category"] = normalized_category
+    normalized_category = category_name_input.strip()
+    user_product_data["category"] = normalized_category
 
     logger.info(
         f"Received product category: '{normalized_category}' for '{product_name_for_log}' "
         f"from owner {update.effective_user.id}."
     )
 
-    await update.message.reply_text(
-        f"Category set to '{normalized_category}'.\n\n"
-        "Let's review the product details before saving. (Confirmation step not fully implemented yet)."  # Placeholder for confirmation
+    # Prepare the confirmation message with all collected details
+    # (Assuming name, description, price, quantity are already in user_product_data)
+    summary_message = (
+        "Okay, let's confirm the details for your new product:\n\n"
+        f"Name: {user_product_data.get('name', 'N/A')}\n"
+        f"Description: {user_product_data.get('description', 'N/A')}\n"
+        f"Price: ${user_product_data.get('price', 0.0):.2f}\n"
+        f"Quantity: {user_product_data.get('quantity', 0)}\n"
+        f"Category: {normalized_category}\n\n"
+        "Is everything correct?"
     )
-    # For this step, we end the conversation here to test incrementally if needed,
-    # OR directly transition if the confirmation step's handler is also being stubbed.
-    # Let's plan to transition to PRODUCT_CONFIRMATION.
-    return PRODUCT_CONFIRMATION
+
+    # Define Inline Keyboard buttons
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "✅ Confirm & Save", callback_data="product_confirm_save"
+            ),
+            InlineKeyboardButton("✏️ Edit", callback_data="product_confirm_edit"),
+            InlineKeyboardButton("❌ Cancel", callback_data="product_confirm_cancel"),
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_text(summary_message, reply_markup=reply_markup)
+
+    logger.info(
+        f"Confirmation shown for product '{product_name_for_log}'. Awaiting user choice."
+    )
+    return PRODUCT_CONFIRMATION  # Transition to await button callback
+
+
+# Placeholder functions for button callbacks (we'll implement these next)
+async def handle_product_save_confirmed(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    query = update.callback_query
+    await query.answer()  # Important to answer callback queries
+    await query.edit_message_text(
+        text="Product saving not implemented yet. Conversation ended."
+    )
+    logger.info("Placeholder: Product save confirmed.")
+    if "new_product" in context.user_data:
+        del context.user_data["new_product"]
+    return ConversationHandler.END
+
+
+async def handle_product_edit_choice(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(
+        text="Product edit feature not implemented yet. Conversation ended."
+    )
+    logger.info("Placeholder: Product edit chosen.")
+    if "new_product" in context.user_data:
+        del context.user_data["new_product"]
+    return ConversationHandler.END
+
+
+async def handle_product_cancel_from_confirmation(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    # This can often be the same logic as your existing /cancel command's handler
+    query = update.callback_query
+    await query.answer()
+    # Let's reuse the main cancel logic if it's suitable, or implement separately
+    if "new_product" in context.user_data:
+        logger.info(
+            f"Cancelling product addition from confirmation. Cleared data: {context.user_data['new_product']}"
+        )
+        del context.user_data["new_product"]
+    else:
+        logger.info(
+            "Product addition cancelled from confirmation before any data was stored."
+        )
+
+    # Edit the message to remove buttons and show cancelled state
+    await query.edit_message_text(text="Product addition cancelled.")
+    return ConversationHandler.END
 
 
 async def cancel_add_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -356,6 +434,18 @@ def main() -> None:
                 MessageHandler(
                     filters.TEXT & ~filters.COMMAND, received_product_category
                 )
+            ],
+            PRODUCT_CONFIRMATION: [
+                CallbackQueryHandler(
+                    handle_product_save_confirmed, pattern="^product_confirm_save$"
+                ),
+                CallbackQueryHandler(
+                    handle_product_edit_choice, pattern="^product_confirm_edit$"
+                ),
+                CallbackQueryHandler(
+                    handle_product_cancel_from_confirmation,
+                    pattern="^product_confirm_cancel$",
+                ),
             ],
         },
         fallbacks=[CommandHandler("cancel", cancel_add_product)],
