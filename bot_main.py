@@ -486,6 +486,7 @@ def main() -> None:
     # Add command handler
     application.add_handler(CommandHandler("set_owner", set_owner))
     application.add_handler(add_product_conv_handler)
+    application.add_handler(CommandHandler("myproducts", my_products))
 
     logger.info("Bot application built and handlers added. Starting polling...")
     # Run the bot until the user presses Ctrl-C
