@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-PalsPantry is a Python-based Telegram bot designed to enable a single shop owner to manage an inventory of products and for customers to browse these products and place simple orders. The bot is built using the `python-telegram-bot` library and emphasizes a clean, abstracted persistence layer for future flexibility.
+PalsPantry is a Python-based Telegram bot designed to enable a single shop owner to manage an inventory of products and for customers to browse these products and place simple orders. The bot is built using the `python-telegram-bot` library and emphasizes a clean, abstracted persistence layer for future flexibility. Its new modular structure, particularly with the `handlers/` directory, enhances maintainability and organization by separating concerns.
 
 The initial MVP focuses on core product management for the shop owner and a browse-to-order-receipt flow for customers, without real-time payment processing.
 
@@ -113,17 +113,10 @@ This project is being developed iteratively.
     * Extended PAL & `InMemoryPersistence` for Product Management.
     * Unit tests for Product Management in `InMemoryPersistence`.
 
-2.  **Milestone 2: Core Product & Shop Features (🚧 IN PROGRESS)**
-    * **Current Focus:** Implementing the `/addproduct` `ConversationHandler` flow for the shop owner.
-        * Initial step (collecting product name) is implemented.
-    * **Next Steps:**
-        * Complete all steps of the `/addproduct` conversation (description, price, quantity, category, image, confirmation).
-        * Implement `/myproducts` command for the owner to view products.
-        * Implement basic customer Browse flow (`/shop` -> categories -> product list -> product details).
-        * Implement "Add to Cart" functionality (using `context.user_data`).
-        * Implement `/cart` command.
-        * Implement "Place Order" logic (generating receipts, notifying owner, updating stock).
-        * Implement basic order status updates by the shop owner.
+2.  **Milestone 2: Core Product & Shop Features (✅ COMPLETE - Refactoring)**
+    *   **Current Focus:** Completed the `/addproduct` conversation flow and `/myproducts` command for the shop owner.
+    *   **Next Steps:**
+        *   Implement the basic customer Browse flow (`/shop` or `/menu`).
 
 
 ## Project Structure
@@ -132,6 +125,9 @@ This project is being developed iteratively.
 palspantry-telegram-bot/
 ├── bot_main.py             # Main application logic, command handlers
 ├── config.py               # Configuration loading
+├── handlers/
+│   ├── owner_handlers.py       # Handlers for owner-specific commands
+│   └── product_management_handlers.py # Handlers for product management commands
 ├── persistence/
 │   ├── __init__.py
 │   ├── abstract_persistence.py # PAL interface

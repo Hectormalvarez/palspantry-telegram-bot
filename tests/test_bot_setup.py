@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock  # For type hinting fixture arguments
 from telegram import Update, User, Bot
 from telegram.ext import ApplicationBuilder
 
-import bot_main
+import handlers.owner_handlers as owner_handlers
 from persistence.abstract_persistence import AbstractPantryPersistence
 
 
@@ -36,7 +36,7 @@ async def test_first_user_becomes_owner(
     user_id_to_set = 12345
     mock_update_message.effective_user = mocker.MagicMock(spec=User, id=user_id_to_set)
 
-    await bot_main.set_owner(mock_update_message, mock_telegram_context)
+    await owner_handlers.set_owner(mock_update_message, mock_telegram_context)
 
     mock_persistence_layer.is_owner_set.assert_called_once()
     mock_persistence_layer.set_bot_owner.assert_called_once_with(user_id_to_set)
@@ -59,7 +59,7 @@ async def test_set_owner_command_handles_owner_already_set(
 
     mock_update_message.effective_user = mocker.MagicMock(spec=User, id=67890)
 
-    await bot_main.set_owner(mock_update_message, mock_telegram_context)
+    await owner_handlers.set_owner(mock_update_message, mock_telegram_context)
 
     mock_persistence_layer.is_owner_set.assert_called_once()
     mock_persistence_layer.get_bot_owner.assert_called_once()
@@ -87,7 +87,7 @@ async def test_set_owner_command_allows_first_user_and_rejects_second(
     mock_update_message.effective_user = mocker.MagicMock(spec=User, id=user1_id)
     mock_update_message.message.reply_text.reset_mock()
 
-    await bot_main.set_owner(mock_update_message, mock_telegram_context)
+    await owner_handlers.set_owner(mock_update_message, mock_telegram_context)
 
     mock_persistence_layer.is_owner_set.assert_called_once()
     mock_persistence_layer.set_bot_owner.assert_called_once_with(user1_id)
@@ -105,7 +105,7 @@ async def test_set_owner_command_allows_first_user_and_rejects_second(
     mock_update_message.effective_user = mocker.MagicMock(spec=User, id=user2_id)
     mock_update_message.message.reply_text.reset_mock()
 
-    await bot_main.set_owner(mock_update_message, mock_telegram_context)
+    await owner_handlers.set_owner(mock_update_message, mock_telegram_context)
 
     mock_persistence_layer.is_owner_set.assert_called_once()
     mock_persistence_layer.get_bot_owner.assert_called_once()
