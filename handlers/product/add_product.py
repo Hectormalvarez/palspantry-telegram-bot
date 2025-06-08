@@ -7,6 +7,8 @@ from telegram import Update, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKe
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from persistence.abstract_persistence import AbstractPantryPersistence
 
+from ..utils import owner_only_command
+
 logger = logging.getLogger(__name__)
 
 # --- Conversation States for Adding a Product (In Progress) ---
@@ -16,24 +18,6 @@ PRODUCT_PRICE = 2  # State for receiving the product price
 PRODUCT_QUANTITY = 3  # For receiving product quantity
 PRODUCT_CATEGORY = 4  # Placeholder for the state after quantity
 PRODUCT_CONFIRMATION = 5
-
-# --- Helper for Owner-Only Commands ---
-async def owner_only_command(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> bool:
-    """Helper to check if the user is the bot owner."""
-    persistence: AbstractPantryPersistence = context.bot_data["persistence"]
-    owner_id = await persistence.get_bot_owner()
-    if not owner_id or update.effective_user.id != owner_id:
-        if update.message:  # Check if update.message exists
-            await update.message.reply_text(
-                "Sorry, this command is only for the bot owner."
-            )
-        logger.warning(
-            f"User {update.effective_user.id} (not owner) tried an owner command."
-        )
-        return False
-    return True
 
 # --- Start Add Product Conversation Handlers ---
 async def add_product_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
