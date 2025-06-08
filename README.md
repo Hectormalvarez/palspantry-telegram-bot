@@ -113,17 +113,8 @@ This project is being developed iteratively.
     * Extended PAL & `InMemoryPersistence` for Product Management.
     * Unit tests for Product Management in `InMemoryPersistence`.
 
-2.  **Milestone 2: Core Product & Shop Features (🚧 IN PROGRESS)**
-    * **Current Focus:** Implementing the `/addproduct` `ConversationHandler` flow for the shop owner.
-        * Initial step (collecting product name) is implemented.
-    * **Next Steps:**
-        * Complete all steps of the `/addproduct` conversation (description, price, quantity, category, image, confirmation).
-        * Implement `/myproducts` command for the owner to view products.
-        * Implement basic customer Browse flow (`/shop` -> categories -> product list -> product details).
-        * Implement "Add to Cart" functionality (using `context.user_data`).
-        * Implement `/cart` command.
-        * Implement "Place Order" logic (generating receipts, notifying owner, updating stock).
-        * Implement basic order status updates by the shop owner.
+2.  **Milestone 2: Core Product & Shop Features (✅ COMPLETE)**
+    * The `/addproduct` feature has been successfully modularized.
 
 
 ## Project Structure
@@ -136,11 +127,13 @@ palspantry-telegram-bot/
 │   ├── __init__.py
 │   ├── abstract_persistence.py # PAL interface
 │   └── in_memory_persistence.py # In-memory data storage
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py             # Pytest fixtures
-│   ├── test_bot_setup.py       # Tests for bot commands & setup
-│   └── test_persistence.py     # Tests for persistence implementations
+├── handlers/
+│   └── product/
+│       └── add_product.py
+└── tests/
+    └── handlers/
+        └── product/
+            └── test_add_product.py
 ├── requirements.txt        # Python dependencies
 ├── .env.example            # Example environment file (actual .env is gitignored)
 ├── .gitignore
