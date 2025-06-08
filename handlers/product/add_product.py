@@ -2,12 +2,25 @@
 This module contains all the handlers and business logic for the
 /addproduct conversation flow.
 """
+
 import logging
-from telegram import Update, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram import (
+    Update,
+    ReplyKeyboardRemove,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
+from telegram.ext import (
+    ContextTypes,
+    ConversationHandler,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    CallbackQueryHandler,
+)
 from persistence.abstract_persistence import AbstractPantryPersistence
 
-from ..utils import owner_only_command
+from handlers.utils import owner_only_command
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +31,7 @@ PRODUCT_PRICE = 2  # State for receiving the product price
 PRODUCT_QUANTITY = 3  # For receiving product quantity
 PRODUCT_CATEGORY = 4  # Placeholder for the state after quantity
 PRODUCT_CONFIRMATION = 5
+
 
 # --- Start Add Product Conversation Handlers ---
 async def add_product_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -32,7 +46,8 @@ async def add_product_start(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         "Let's add a new product! First, what is the product's name?"
     )
     logger.info(
-        f"Owner {update.effective_user.id} started /addproduct. Asking for product name."
+        "Owner %s started /addproduct. Asking for product name.",
+        update.effective_user.id,
     )
     return PRODUCT_NAME  # Transition to the PRODUCT_NAME state
 
@@ -45,18 +60,21 @@ async def received_product_name(
 
     if not product_name or len(product_name.strip()) == 0:
         await update.message.reply_text(
-            "Product name cannot be empty. Please enter a name, or type /cancel to exit."
+            "Product name cannot be empty. Please enter a name, "
+            "or type /cancel to exit."
         )
         return PRODUCT_NAME  # Stay in the same state, ask for name again
 
     context.user_data["new_product"]["name"] = product_name.strip()
     logger.info(
-        f"Received product name: '{product_name}' from owner {update.effective_user.id}."
+        "Received product name: '%s' from owner %s.",
+        product_name,
+        update.effective_user.id,
     )
 
     await update.message.reply_text(
         f"Great! Product name is '{product_name}'.\n\n"
-        "Now, please enter a description for the product."  # <-- Ask for description
+        "Now, please enter a description for the product."
     )
     return PRODUCT_DESCRIPTION  # <-- TRANSITION TO NEW STATE
 
@@ -69,19 +87,23 @@ async def received_product_description(
 
     if not product_description or len(product_description.strip()) == 0:
         await update.message.reply_text(
-            "Product description cannot be empty. Please enter a description, or type /cancel to exit."
+            "Product description cannot be empty. Please enter a description, "
+            "or type /cancel to exit."
         )
         return PRODUCT_DESCRIPTION  # Stay in the same state, ask for description again
 
     context.user_data["new_product"]["description"] = product_description.strip()
     logger.info(
-        f"Received product description for '{context.user_data['new_product']['name']}' "
-        f"from owner {update.effective_user.id}. Description: '{product_description[:30]}...'"
+        "Received product description for '%s' from owner %s. Description: '%s...'",
+        context.user_data["new_product"]["name"],
+        update.effective_user.id,
+        product_description[:30],
     )
 
     await update.message.reply_text(
-        f"Description noted.\n\n"
-        "Now, what's the price for this product? Please enter a number (e.g., 10.99 or 5)."  # Ask for price
+        "Description noted.\n\n"
+        "Now, what's the price for this product? Please enter a number "
+        "(e.g., 10.99 or 5)."
     )
 
     return PRODUCT_PRICE  # <--(no longer ends conversation here)
@@ -103,14 +125,17 @@ async def received_product_price(
         except ValueError:
             # If float(price_text) raises a ValueError (e.g., for "abc"),
             # converted_price will remain None.
-            logger.debug(f"Price input '{price_text}' could not be converted to float.")
-            pass  # We'll handle the None case in the if block below
+            logger.debug(
+                "Price input '%s' could not be converted to float.", price_text
+            )
 
     # Now, validate the converted_price (it must be a number and positive)
     if converted_price is None or converted_price <= 0:
         logger.warning(
-            f"Invalid price input: '{price_text}' (converted: {converted_price}) "
-            f"from owner {update.effective_user.id}."
+            "Invalid price input: '%s' (converted: %s) from owner %s.",
+            price_text,
+            converted_price,
+            update.effective_user.id,
         )
         await update.message.reply_text(
             "That doesn't look like a valid price. "
@@ -122,17 +147,20 @@ async def received_product_price(
     context.user_data["new_product"]["price"] = converted_price
     product_name = context.user_data["new_product"].get("name", "the product")
     logger.info(
-        f"Received product price: {converted_price} for '{product_name}' "
-        f"from owner {update.effective_user.id}."
+        "Received product price: %s for '%s' from owner %s.",
+        converted_price,
+        product_name,
+        update.effective_user.id,
     )
 
     await update.message.reply_text(
         f"Price set to {converted_price:.2f}.\n\n"
-        "Now, how many units of this product are available? Please enter a whole number (e.g., 10)."
+        "Now, how many units of this product are available? "
+        "Please enter a whole number (e.g., 10)."
     )
 
     # Transition to the PRODUCT_QUANTITY state
-    logger.debug(f"Product data so far: {context.user_data['new_product']}")
+    logger.debug("Product data so far: %s", context.user_data["new_product"])
     # Do NOT delete new_product here, as it's needed for the next step
     return PRODUCT_QUANTITY
 
@@ -148,13 +176,16 @@ async def received_product_quantity(
 
     # Try to convert and validate in one go
     try:
-        # The .strip() is important if you want to treat "   " as potentially invalid before int()
+        # The .strip() is important if you want to treat
+        # "   " as potentially invalid before int()
         # or allow int(" 5 ") to work. int() can handle leading/trailing whitespace.
         if (
             not quantity_text or not quantity_text.strip()
         ):  # Explicitly catch empty/whitespace first if desired for logging
             logger.warning(
-                f"Empty quantity input for '{product_name}' from owner {update.effective_user.id}."
+                "Empty quantity input for '%s' from owner %s.",
+                product_name,
+                update.effective_user.id,
             )
             # Let it fall through to the ValueError or a specific check, or handle here
             # For a unified message, we let the int conversion or value check fail.
@@ -167,8 +198,10 @@ async def received_product_quantity(
 
         context.user_data["new_product"]["quantity"] = quantity
         logger.info(
-            f"Received product quantity: {quantity} for '{product_name}' "
-            f"from owner {update.effective_user.id}."
+            "Received product quantity: %s for '%s' from owner %s.",
+            quantity,
+            product_name,
+            update.effective_user.id,
         )
 
         await update.message.reply_text(
@@ -179,10 +212,12 @@ async def received_product_quantity(
 
     except ValueError:  # Catches int() conversion errors and quantity <= 0
         logger.warning(
-            f"Invalid quantity input: '{quantity_text}' for '{product_name}' "
-            f"from owner {update.effective_user.id}."
+            "Invalid quantity input: '%s' for '%s' from owner %s.",
+            quantity_text,
+            product_name,
+            update.effective_user.id,
         )
-        await update.message.reply_text(  # This is the unified message your test expects
+        await update.message.reply_text(
             "That doesn't look like a valid quantity. "
             "Please enter a whole positive number (e.g., 10), or type /cancel."
         )
@@ -201,7 +236,9 @@ async def received_product_category(
 
     if not category_name_input or not category_name_input.strip():
         logger.warning(
-            f"Empty category input for '{product_name_for_log}' from owner {update.effective_user.id}."
+            "Empty category input for '%s' from owner %s.",
+            product_name_for_log,
+            update.effective_user.id,
         )
         await update.message.reply_text(
             "Category name cannot be empty. Please enter a category, or type /cancel."
@@ -212,8 +249,10 @@ async def received_product_category(
     user_product_data["category"] = normalized_category
 
     logger.info(
-        f"Received product category: '{normalized_category}' for '{product_name_for_log}' "
-        f"from owner {update.effective_user.id}."
+        "Received product category: '%s' for '%s' from owner %s.",
+        normalized_category,
+        product_name_for_log,
+        update.effective_user.id,
     )
 
     # Prepare the confirmation message with all collected details
@@ -243,7 +282,8 @@ async def received_product_category(
     await update.message.reply_text(summary_message, reply_markup=reply_markup)
 
     logger.info(
-        f"Confirmation shown for product '{product_name_for_log}'. Awaiting user choice."
+        "Confirmation shown for product '%s'. Awaiting user choice.",
+        product_name_for_log,
     )
     return PRODUCT_CONFIRMATION  # Transition to await button callback
 
@@ -261,21 +301,24 @@ async def handle_product_save_confirmed(
 
     if not product_data:
         logger.error(
-            f"User {update.effective_user.id} tried to save product but 'new_product' data was missing."
+            "User %s tried to save product but 'new_product' data was missing.",
+            update.effective_user.id,
         )
         await query.edit_message_text(
-            "An error occurred: Product data not found. Please try adding the product again."
+            "An error occurred: Product data not found."
+            "Please try adding the product again."
         )
         return ConversationHandler.END
 
     product_id = await persistence.add_product(product_data)
 
     if product_id:
-        success_message = (
-            f"✅ Product '{product_name}' (ID: {product_id}) has been successfully added!"
-        )
+        success_message = f"✅ Product '{product_name}' (ID: {product_id}) added!"
         logger.info(
-            f"Product '{product_name}' (ID: {product_id}) saved by owner {update.effective_user.id}."
+            "Product '%s' (ID: %s) saved by owner %s.",
+            product_name,
+            product_id,
+            update.effective_user.id,
         )
         await query.edit_message_text(text=success_message)
     else:
@@ -283,7 +326,9 @@ async def handle_product_save_confirmed(
             f"❌ Failed to add product '{product_name}'. Please try again later."
         )
         logger.error(
-            f"Failed to save product '{product_name}' for owner {update.effective_user.id}."
+            "Failed to save product '%s' for owner %s.",
+            product_name,
+            update.effective_user.id,
         )
         await query.edit_message_text(text=failure_message)
 
@@ -318,7 +363,8 @@ async def handle_product_cancel_from_confirmation(
     # Let's reuse the main cancel logic if it's suitable, or implement separately
     if "new_product" in context.user_data:
         logger.info(
-            f"Cancelling product addition from confirmation. Cleared data: {context.user_data['new_product']}"
+            "Cancelling product addition from confirmation. Cleared data: %s",
+            context.user_data["new_product"],
         )
         del context.user_data["new_product"]
     else:
@@ -335,7 +381,8 @@ async def cancel_add_product(update: Update, context: ContextTypes.DEFAULT_TYPE)
     """Cancels and ends the product addition conversation."""
     if "new_product" in context.user_data:
         logger.info(
-            f"Cancelling product addition. Cleared data: {context.user_data['new_product']}"
+            "Cancelling product addition. Cleared data: %s",
+            context.user_data["new_product"],
         )
         del context.user_data["new_product"]  # Clean up any partially collected data
     else:

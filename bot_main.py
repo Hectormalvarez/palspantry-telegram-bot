@@ -16,17 +16,17 @@ def main() -> None:
     logger.info("Starting bot...")
 
     persistence_instance = InMemoryPersistence()
-    
+
     application = ApplicationBuilder().token(config.BOT_TOKEN).build()
     application.bot_data["persistence"] = persistence_instance
-    
+
     application.add_handler(set_owner_handler)
     application.add_handler(get_add_product_handler())
 
     logger.info("Bot application built and handlers added. Starting polling...")
-    
+
     application.run_polling()
-    
+
     logger.info("Bot polling stopped.")
 
 

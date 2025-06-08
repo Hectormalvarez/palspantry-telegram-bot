@@ -1,11 +1,6 @@
-# FILE: tests/test_bot_setup.py
 import pytest
-from unittest.mock import AsyncMock  # For type hinting fixture arguments
-from telegram import Update, User, Bot
+from telegram import Bot
 from telegram.ext import ApplicationBuilder
-
-import bot_main
-from persistence.abstract_persistence import AbstractPantryPersistence
 
 
 @pytest.mark.asyncio

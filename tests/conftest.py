@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock  # Needed for the AsyncMock type hint
+
+import pytest
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -26,10 +27,6 @@ def mock_telegram_context(
     Provides a mock Telegram ContextTypes.DEFAULT_TYPE object
     with the mock_persistence_layer already injected into application_data.
     """
-    # spec=ContextTypes.DEFAULT_TYPE is good if ContextTypes.DEFAULT_TYPE is defined/imported.
-    # PTB v20+ typically uses just ContextTypes or a specific subclass if you define one.
-    # For a generic mock, spec=ContextTypes might be more direct if DEFAULT_TYPE is complex.
-    # However, ContextTypes.DEFAULT_TYPE should work if that's what your handlers expect.
     context = mocker.AsyncMock(spec=ContextTypes.DEFAULT_TYPE)
     context.bot_data = {"persistence": mock_persistence_layer}
     return context
