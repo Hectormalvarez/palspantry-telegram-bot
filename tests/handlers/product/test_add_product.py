@@ -17,8 +17,6 @@ from persistence.abstract_persistence import (
 )  # For type hinting
 
 
-
-
 # --- Tests for add_product_start ---
 @pytest.mark.asyncio
 async def test_add_product_start_as_owner(
@@ -403,8 +401,6 @@ async def test_cancel_add_product_without_data(
     assert args[0] == "Product addition cancelled."
     assert isinstance(kwargs.get("reply_markup"), ReplyKeyboardRemove)
     assert "new_product" not in mock_telegram_context.user_data
-
-
 
 
 @pytest.mark.parametrize(

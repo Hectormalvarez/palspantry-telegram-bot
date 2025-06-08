@@ -5,6 +5,7 @@ from persistence.abstract_persistence import AbstractPantryPersistence
 
 logger = logging.getLogger(__name__)
 
+
 # --- Helper for Owner-Only Commands ---
 async def owner_only_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE

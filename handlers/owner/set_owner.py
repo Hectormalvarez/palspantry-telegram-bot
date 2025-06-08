@@ -5,6 +5,7 @@ from persistence.abstract_persistence import AbstractPantryPersistence
 
 logger = logging.getLogger(__name__)
 
+
 async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Access the persistence instance from bot_data
     # We'll ensure it's put there in the main() function
@@ -13,7 +14,9 @@ async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     username = update.effective_user.username or "N/A"
 
-    logger.info(f"User {user_id} (username: {username}) attempted to use /set_owner.")
+    logger.info(
+        "User %s (username: %s) attempted to use /set_owner.", user_id, username
+    )
 
     # Check if an owner is already set using the persistence layer
     if not await persistence.is_owner_set():
@@ -21,25 +24,34 @@ async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         success = await persistence.set_bot_owner(user_id)
         if success:
             logger.info(
-                f"Bot owner set to user_id: {user_id} (username: {username}) via persistence layer."
+                "Bot owner set to user_id: %s (username: %s) via persistence layer.",
+                user_id,
+                username,
             )
-            await update.message.reply_text(f"You are now the owner of this bot.")
+            await update.message.reply_text("You are now the owner of this bot.")
         else:
-            # This case might be rare if is_owner_set() was false, but good for completeness
+            # This case might be rare if is_owner_set() was false
             # or if set_bot_owner had other internal reasons to fail.
             current_owner = await persistence.get_bot_owner()  # Re-fetch to be sure
             logger.warning(
-                f"User {user_id} (username: {username}) tried to set owner, "
-                f"but persistence.set_bot_owner returned false. Current owner: {current_owner}."
+                "User %s (username: %s) tried to set owner, "
+                "but persistence.set_bot_owner returned false. Current owner: %s.",
+                user_id,
+                username,
+                current_owner,
             )
             await update.message.reply_text(
-                "Could not set owner at this time. An owner might already be registered."
+                "Could not set owner at this time. "
+                "An owner might already be registered."
             )
     else:
         current_owner_id = await persistence.get_bot_owner()
         logger.warning(
-            f"User {user_id} (username: {username}) tried to set owner, "
-            f"but owner is already {current_owner_id} (checked via persistence layer)."
+            "User %s (username: %s) tried to set owner, "
+            "but owner is already %s (checked via persistence layer).",
+            user_id,
+            username,
+            current_owner_id,
         )
         await update.message.reply_text("An owner has already been set.")
 

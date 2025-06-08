@@ -1,6 +1,6 @@
+from typing import Any  # For type hinting
 import pytest
 from persistence.in_memory_persistence import InMemoryPersistence
-from typing import Any  # For type hinting
 
 
 @pytest.mark.asyncio
