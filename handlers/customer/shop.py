@@ -33,7 +33,7 @@ async def shop_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 async def handle_category_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Handles a user clicking a category button.
-    Displays the products in the selected category.
+    Displays the products in the selected category as clickable buttons.
     """
     query = update.callback_query
     await query.answer()  # Acknowledge the button press
@@ -50,12 +50,21 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
         )
         return
 
-    # Format the product list into a string
-    product_list_text = [f"Products in {category_name}:"]
+    # Build an InlineKeyboardMarkup with a button for each product
+    keyboard = []
     for product in products:
-        product_list_text.append(f"- {product['name']} (${product['price']:.2f})")
+        button_text = f"{product['name']} (${product['price']:.2f})"
+        # The callback_data will include the product ID for the next step
+        callback_data = f"product_{product.get('id')}"
+        keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
 
-    await query.edit_message_text(text="\n".join(product_list_text))
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    # Edit the message to show the new header and the product buttons
+    await query.edit_message_text(
+        text=f"Products in {category_name}:",
+        reply_markup=reply_markup,
+    )
 
 
 shop_start_handler = CommandHandler("shop", shop_start)

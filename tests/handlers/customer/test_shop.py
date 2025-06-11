@@ -65,7 +65,7 @@ async def test_shop_start_no_categories(
 @pytest.mark.asyncio
 async def test_handle_category_selection_with_products(
     mocker,
-    mock_update_callback_query: Update,  # Uses our new fixture
+    mock_update_callback_query: Update, # Uses our new fixture
     mock_telegram_context: ContextTypes.DEFAULT_TYPE,
     mock_persistence_layer: AbstractPantryPersistence,
 ):
@@ -79,27 +79,34 @@ async def test_handle_category_selection_with_products(
     mock_match.group.return_value = category_name
     mock_telegram_context.matches = [mock_match]
 
+    # Add IDs to our mock products
     mock_products = [
-        {"name": "Croissant", "price": 2.50},
-        {"name": "Baguette", "price": 3.00},
+        {"id": "prod_123", "name": "Croissant", "price": 2.50},
+        {"id": "prod_456", "name": "Baguette", "price": 3.00},
     ]
     mock_persistence_layer.get_products_by_category.return_value = mock_products
 
     # Act
-    await shop.handle_category_selection(
-        mock_update_callback_query, mock_telegram_context
-    )
+    await shop.handle_category_selection(mock_update_callback_query, mock_telegram_context)
 
     # Assert
     mock_update_callback_query.callback_query.answer.assert_called_once()
-    mock_persistence_layer.get_products_by_category.assert_called_once_with(
-        category_name
-    )
+    mock_persistence_layer.get_products_by_category.assert_called_once_with(category_name)
 
-    expected_text = "Products in Bakery:\n- Croissant ($2.50)\n- Baguette ($3.00)"
+    # Assert that the bot replies with buttons
     mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
-        text=expected_text
+        text=f"Products in {category_name}:",
+        reply_markup=ANY
     )
+    sent_markup = mock_update_callback_query.callback_query.edit_message_text.call_args.kwargs.get("reply_markup")
+    assert isinstance(sent_markup, InlineKeyboardMarkup)
+    assert len(sent_markup.inline_keyboard) == 2  # We expect two buttons
+    # Check the first button
+    assert sent_markup.inline_keyboard[0][0].text == "Croissant ($2.50)"
+    assert sent_markup.inline_keyboard[0][0].callback_data == "product_prod_123"
+    # Check the second button
+    assert sent_markup.inline_keyboard[1][0].text == "Baguette ($3.00)"
+    assert sent_markup.inline_keyboard[1][0].callback_data == "product_prod_456"
 
 
 @pytest.mark.asyncio
