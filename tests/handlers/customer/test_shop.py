@@ -65,7 +65,7 @@ async def test_shop_start_no_categories(
 @pytest.mark.asyncio
 async def test_handle_category_selection_with_products(
     mocker,
-    mock_update_callback_query: Update, # Uses our new fixture
+    mock_update_callback_query: Update,  # Uses our new fixture
     mock_telegram_context: ContextTypes.DEFAULT_TYPE,
     mock_persistence_layer: AbstractPantryPersistence,
 ):
@@ -87,18 +87,23 @@ async def test_handle_category_selection_with_products(
     mock_persistence_layer.get_products_by_category.return_value = mock_products
 
     # Act
-    await shop.handle_category_selection(mock_update_callback_query, mock_telegram_context)
+    await shop.handle_category_selection(
+        mock_update_callback_query, mock_telegram_context
+    )
 
     # Assert
     mock_update_callback_query.callback_query.answer.assert_called_once()
-    mock_persistence_layer.get_products_by_category.assert_called_once_with(category_name)
+    mock_persistence_layer.get_products_by_category.assert_called_once_with(
+        category_name
+    )
 
     # Assert that the bot replies with buttons
     mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
-        text=f"Products in {category_name}:",
-        reply_markup=ANY
+        text=f"Products in {category_name}:", reply_markup=ANY
     )
-    sent_markup = mock_update_callback_query.callback_query.edit_message_text.call_args.kwargs.get("reply_markup")
+    sent_markup = mock_update_callback_query.callback_query.edit_message_text.call_args.kwargs.get(
+        "reply_markup"
+    )
     assert isinstance(sent_markup, InlineKeyboardMarkup)
     assert len(sent_markup.inline_keyboard) == 2  # We expect two buttons
     # Check the first button
@@ -142,3 +147,53 @@ async def test_handle_category_selection_no_products(
     mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
         text=expected_text
     )
+
+
+@pytest.mark.asyncio
+async def test_handle_product_selection(
+    mocker,
+    mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
+    """Test product button click shows product details and 'Add to Cart' button."""
+    # Arrange
+    product_id = "prod_123"
+    mock_update_callback_query.callback_query.data = f"product_{product_id}"
+
+    # Mock the context.matches to simulate regex capture
+    mock_match = mocker.MagicMock()
+    mock_match.group.return_value = product_id
+    mock_telegram_context.matches = [mock_match]
+
+    mock_product = {
+        "id": product_id,
+        "name": "Croissant",
+        "description": "A flaky, buttery pastry.",
+        "price": 2.50,
+    }
+    mock_persistence_layer.get_product.return_value = mock_product
+
+    # Act
+    await shop.handle_product_selection(mock_update_callback_query, mock_telegram_context)
+
+    # Assert
+    mock_update_callback_query.callback_query.answer.assert_called_once()
+    mock_persistence_layer.get_product.assert_called_once_with(product_id)
+
+    expected_text = (
+        "Name: Croissant\n"
+        "Description: A flaky, buttery pastry.\n"
+        "Price: $2.50"
+    )
+    mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
+        text=expected_text,
+        reply_markup=ANY,
+    )
+
+    # Check that the new keyboard is correct
+    sent_markup = mock_update_callback_query.callback_query.edit_message_text.call_args.kwargs.get("reply_markup")
+    assert isinstance(sent_markup, InlineKeyboardMarkup)
+    assert len(sent_markup.inline_keyboard) == 1  # Expect one row of buttons
+    assert sent_markup.inline_keyboard[0][0].text == "🛒 Add to Cart"
+    assert sent_markup.inline_keyboard[0][0].callback_data == f"add_to_cart_{product_id}"

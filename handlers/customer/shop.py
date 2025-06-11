@@ -20,7 +20,9 @@ async def shop_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     keyboard = []
     for category in categories:
         # Each button is on its own row
-        keyboard.append([InlineKeyboardButton(category, callback_data=f"category_{category}")])
+        keyboard.append(
+            [InlineKeyboardButton(category, callback_data=f"category_{category}")]
+        )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -30,7 +32,9 @@ async def shop_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     )
 
 
-async def handle_category_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_category_selection(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """
     Handles a user clicking a category button.
     Displays the products in the selected category as clickable buttons.
@@ -56,7 +60,9 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
         button_text = f"{product['name']} (${product['price']:.2f})"
         # The callback_data will include the product ID for the next step
         callback_data = f"product_{product.get('id')}"
-        keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
+        keyboard.append(
+            [InlineKeyboardButton(button_text, callback_data=callback_data)]
+        )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -67,9 +73,51 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
     )
 
 
+async def handle_product_selection(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Handles a user clicking a product button, showing product details."""
+    query = update.callback_query
+    await query.answer()
+
+    # Extract the product_id from the captured regex group
+    product_id = context.matches[0].group(1)
+
+    persistence: AbstractPantryPersistence = context.bot_data["persistence"]
+    product = await persistence.get_product(product_id)
+
+    if not product:
+        await query.edit_message_text(text="Sorry, this product could not be found.")
+        return
+
+    # Format the detailed message
+    text = (
+        f"Name: {product['name']}\n"
+        f"Description: {product['description']}\n"
+        f"Price: ${product['price']:.2f}"
+    )
+
+    # Create the "Add to Cart" button
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "🛒 Add to Cart", callback_data=f"add_to_cart_{product_id}"
+            )
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await query.edit_message_text(text=text, reply_markup=reply_markup)
+
+
 shop_start_handler = CommandHandler("shop", shop_start)
 
 
 category_selection_handler = CallbackQueryHandler(
     handle_category_selection, pattern="^category_(.+)"
+)
+
+
+product_selection_handler = CallbackQueryHandler(
+    handle_product_selection, pattern="^product_(.+)"
 )
