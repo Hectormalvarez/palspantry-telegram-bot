@@ -1,7 +1,12 @@
+import logging
+
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CommandHandler, ContextTypes, CallbackQueryHandler
 
 from persistence.abstract_persistence import AbstractPantryPersistence
+
+
+logger = logging.getLogger(__name__)
 
 
 async def shop_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -110,6 +115,36 @@ async def handle_product_selection(
     await query.edit_message_text(text=text, reply_markup=reply_markup)
 
 
+async def handle_add_to_cart(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Handles the 'Add to Cart' button click."""
+    query = update.callback_query
+    product_id = context.matches[0].group(1)
+
+    persistence: AbstractPantryPersistence = context.bot_data["persistence"]
+    product = await persistence.get_product(product_id)
+
+    # Handle case where product might not exist anymore
+    if not product:
+        await query.answer(
+            "Sorry, this product is no longer available.", show_alert=True
+        )
+        return
+
+    # Get the user's cart from their session, creating it if it's the first time
+    cart = context.user_data.setdefault("cart", {})
+
+    # Add the item to the cart or increment its quantity
+    current_quantity = cart.get(product_id, 0)
+    cart[product_id] = current_quantity + 1
+
+    logger.info(f"User {update.effective_user.id} updated cart: {cart}")
+
+    # Send a small confirmation pop-up to the user
+    await query.answer(text=f"{product['name']} added to cart!")
+
+
 shop_start_handler = CommandHandler("shop", shop_start)
 
 
@@ -120,4 +155,9 @@ category_selection_handler = CallbackQueryHandler(
 
 product_selection_handler = CallbackQueryHandler(
     handle_product_selection, pattern="^product_(.+)"
+)
+
+
+add_to_cart_handler = CallbackQueryHandler(
+    handle_add_to_cart, pattern="^add_to_cart_(.+)"
 )

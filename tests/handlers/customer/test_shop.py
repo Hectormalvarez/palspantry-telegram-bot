@@ -197,3 +197,68 @@ async def test_handle_product_selection(
     assert len(sent_markup.inline_keyboard) == 1  # Expect one row of buttons
     assert sent_markup.inline_keyboard[0][0].text == "🛒 Add to Cart"
     assert sent_markup.inline_keyboard[0][0].callback_data == f"add_to_cart_{product_id}"
+
+
+@pytest.mark.asyncio
+async def test_handle_add_to_cart_new_item(
+    mocker,
+    mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
+    """Test 'Add to Cart' button for a new item."""
+    # Arrange
+    product_id = "prod_123"
+    mock_update_callback_query.callback_query.data = f"add_to_cart_{product_id}"
+    mock_telegram_context.user_data = {}  # Start with an empty user_data
+
+    # Mock the context.matches to simulate regex capture
+    mock_match = mocker.MagicMock()
+    mock_match.group.return_value = product_id
+    mock_telegram_context.matches = [mock_match]
+
+    # Mock persistence to get the product name for the confirmation message
+    mock_persistence_layer.get_product.return_value = {"name": "Croissant"}
+
+    # Act
+    await shop.handle_add_to_cart(mock_update_callback_query, mock_telegram_context)
+
+    # Assert
+    # Check that the cart was created and the item was added
+    assert "cart" in mock_telegram_context.user_data
+    assert mock_telegram_context.user_data["cart"] == {product_id: 1}
+    # Check that the user received a confirmation pop-up
+    mock_update_callback_query.callback_query.answer.assert_called_once_with(
+        text="Croissant added to cart!"
+    )
+
+
+@pytest.mark.asyncio
+async def test_handle_add_to_cart_existing_item(
+    mocker,
+    mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
+    """Test 'Add to Cart' button for an item already in the cart."""
+    # Arrange
+    product_id = "prod_123"
+    mock_update_callback_query.callback_query.data = f"add_to_cart_{product_id}"
+    # Start with the item already in the user's cart
+    mock_telegram_context.user_data = {"cart": {product_id: 2}}
+
+    mock_match = mocker.MagicMock()
+    mock_match.group.return_value = product_id
+    mock_telegram_context.matches = [mock_match]
+
+    mock_persistence_layer.get_product.return_value = {"name": "Croissant"}
+
+    # Act
+    await shop.handle_add_to_cart(mock_update_callback_query, mock_telegram_context)
+
+    # Assert
+    # Check that the quantity was incremented
+    assert mock_telegram_context.user_data["cart"][product_id] == 3
+    mock_update_callback_query.callback_query.answer.assert_called_once_with(
+        text="Croissant added to cart!"
+    )
