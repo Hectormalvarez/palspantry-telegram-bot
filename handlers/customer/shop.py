@@ -111,13 +111,22 @@ async def handle_product_selection(
         f"Price: ${product['price']:.2f}"
     )
 
+    category_name = product.get("category", "Products") # Safely get category
+    
     # Create the "Add to Cart" button
     keyboard = [
         [
             InlineKeyboardButton(
                 "🛒 Add to Cart", callback_data=f"add_to_cart_{product_id}"
             )
-        ]
+        ],
+        [
+            InlineKeyboardButton(
+                f"<< Back to {category_name} Products",
+                callback_data=f"navigate_to_products_{category_name}",
+            ),
+            InlineKeyboardButton("❌ Close", callback_data="close_shop"),
+        ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 

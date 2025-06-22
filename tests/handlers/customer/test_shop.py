@@ -166,6 +166,7 @@ async def test_handle_product_selection(
     """Test product button click shows product details and 'Add to Cart' button."""
     # Arrange
     product_id = "prod_123"
+    category_name = "Bakery"  # Needed for the "Back" button
     mock_update_callback_query.callback_query.data = f"product_{product_id}"
 
     # Mock the context.matches to simulate regex capture
@@ -178,6 +179,7 @@ async def test_handle_product_selection(
         "name": "Croissant",
         "description": "A flaky, buttery pastry.",
         "price": 2.50,
+        "category": category_name,
     }
     mock_persistence_layer.get_product.return_value = mock_product
 
@@ -189,9 +191,9 @@ async def test_handle_product_selection(
     mock_persistence_layer.get_product.assert_called_once_with(product_id)
 
     expected_text = (
-        "Name: Croissant\n"
-        "Description: A flaky, buttery pastry.\n"
-        "Price: $2.50"
+        f"Name: {mock_product['name']}\n"
+        f"Description: {mock_product['description']}\n"
+        f"Price: ${mock_product['price']:.2f}"
     )
     mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
         text=expected_text,
@@ -201,9 +203,17 @@ async def test_handle_product_selection(
     # Check that the new keyboard is correct
     sent_markup = mock_update_callback_query.callback_query.edit_message_text.call_args.kwargs.get("reply_markup")
     assert isinstance(sent_markup, InlineKeyboardMarkup)
-    assert len(sent_markup.inline_keyboard) == 1  # Expect one row of buttons
+    assert len(sent_markup.inline_keyboard) == 2  # Expect Two row of buttons
     assert sent_markup.inline_keyboard[0][0].text == "🛒 Add to Cart"
     assert sent_markup.inline_keyboard[0][0].callback_data == f"add_to_cart_{product_id}"
+    
+    # Assert the navigation buttons are in the second row
+    nav_row = sent_markup.inline_keyboard[1]
+    assert len(nav_row) == 2
+    assert nav_row[0].text == f"<< Back to {category_name} Products"
+    assert nav_row[0].callback_data == f"navigate_to_products_{category_name}"
+    assert nav_row[1].text == "❌ Close"
+    assert nav_row[1].callback_data == "close_shop"
 
 
 @pytest.mark.asyncio
