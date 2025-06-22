@@ -279,3 +279,23 @@ async def test_handle_add_to_cart_existing_item(
     mock_update_callback_query.callback_query.answer.assert_called_once_with(
         text="Croissant added to cart!"
     )
+
+
+@pytest.mark.asyncio
+async def test_handle_close_shop(
+    mock_update_callback_query: Update,
+):
+    """Test that the 'close_shop' callback ends the interaction"""
+    # Arrange
+    query = mock_update_callback_query.callback_query
+    query.data = "close_shop"
+        
+    # Act
+    await shop.handle_close_shop(mock_update_callback_query, None)
+    
+    # Assert
+    query.answer.assert_called_once()
+    query.edit_message_text.assert_called_once_with(
+        text="Shopping session ended.",
+        reply_markup=None, # Asserts the keyboard is removed
+    )

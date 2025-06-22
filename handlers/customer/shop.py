@@ -111,8 +111,8 @@ async def handle_product_selection(
         f"Price: ${product['price']:.2f}"
     )
 
-    category_name = product.get("category", "Products") # Safely get category
-    
+    category_name = product.get("category", "Products")  # Safely get category
+
     # Create the "Add to Cart" button
     keyboard = [
         [
@@ -163,6 +163,19 @@ async def handle_add_to_cart(
     await query.answer(text=f"{product['name']} added to cart!")
 
 
+async def handle_close_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handles the 'close_shop' callback by ending the interaction."""
+    
+    query = update.callback_query
+    
+    # Acknowledge the button press
+    await query.answer()  
+    await query.edit_message_text(
+        # This removes the keyboard
+        text="Shopping session ended.", reply_markup=None
+    )
+
+
 shop_start_handler = CommandHandler("shop", shop_start)
 
 
@@ -179,3 +192,6 @@ product_selection_handler = CallbackQueryHandler(
 add_to_cart_handler = CallbackQueryHandler(
     handle_add_to_cart, pattern="^add_to_cart_(.+)"
 )
+
+
+close_shop_handler = CallbackQueryHandler(handle_close_shop, pattern="^close_shop$")
