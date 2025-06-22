@@ -105,13 +105,20 @@ async def test_handle_category_selection_with_products(
         "reply_markup"
     )
     assert isinstance(sent_markup, InlineKeyboardMarkup)
-    assert len(sent_markup.inline_keyboard) == 2  # We expect two buttons
+    assert len(sent_markup.inline_keyboard) == 3
     # Check the first button
     assert sent_markup.inline_keyboard[0][0].text == "Croissant ($2.50)"
     assert sent_markup.inline_keyboard[0][0].callback_data == "product_prod_123"
     # Check the second button
     assert sent_markup.inline_keyboard[1][0].text == "Baguette ($3.00)"
     assert sent_markup.inline_keyboard[1][0].callback_data == "product_prod_456"
+    # Check the navigation row
+    nav_row = sent_markup.inline_keyboard[2]
+    assert len(nav_row) == 2  # Expect two buttons in the navigation row
+    assert nav_row[0].text == "<< Back to Categories"
+    assert nav_row[0].callback_data == "navigate_to_categories"
+    assert nav_row[1].text == "❌ Close"
+    assert nav_row[1].callback_data == "close_shop"
 
 
 @pytest.mark.asyncio

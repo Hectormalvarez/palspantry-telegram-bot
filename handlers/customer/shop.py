@@ -69,6 +69,15 @@ async def handle_category_selection(
             [InlineKeyboardButton(button_text, callback_data=callback_data)]
         )
 
+    # Add the navigation row
+    navigation_row = [
+        InlineKeyboardButton(
+            "<< Back to Categories", callback_data="navigate_to_categories"
+        ),
+        InlineKeyboardButton("❌ Close", callback_data="close_shop"),
+    ]
+    keyboard.append(navigation_row)
+
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     # Edit the message to show the new header and the product buttons
