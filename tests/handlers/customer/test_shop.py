@@ -339,3 +339,47 @@ async def test_handle_back_to_categories(
     assert sent_markup.inline_keyboard[0][0].callback_data == "category_Bakery"
     assert sent_markup.inline_keyboard[1][0].text == "Drinks"
     assert sent_markup.inline_keyboard[1][0].callback_data == "category_Drinks"
+
+
+@pytest.mark.asyncio
+async def test_handle_back_to_products(
+    mocker,
+    mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
+    """Test 'Back to Products' callback re-uses category selection logic."""
+    # Arrange
+    query = mock_update_callback_query.callback_query
+    category_name = "Bakery"
+    # This callback will be handled by the same function as "category_Bakery"
+    query.data = f"navigate_to_products_{category_name}"
+    
+    # We must simulate the regex match that the CallbackQueryHandler performs.
+    # The handler will find `Bakery` and store it in `context.matches`.
+    mock_match = mocker.MagicMock()
+    mock_match.group.return_value = category_name
+    mock_telegram_context.matches = [mock_match]
+
+    # Mock the persistence layer to return products for this category
+    mock_products = [
+        {"id": "prod_123", "name": "Croissant", "price": 2.50},
+    ]
+    mock_persistence_layer.get_products_by_category.return_value = mock_products
+    
+    
+    # Act
+    # We call the *existing* function to confirm it works for this case.
+    await shop.handle_category_selection(mock_update_callback_query, mock_telegram_context)
+
+    # Assert
+    query.answer.assert_called_once()
+    mock_persistence_layer.get_products_by_category.assert_called_once_with(
+        category_name
+    )
+
+    # Assert that the product list keyboard is regenerated correctly
+    sent_markup = query.edit_message_text.call_args.kwargs.get("reply_markup")
+    assert isinstance(sent_markup, InlineKeyboardMarkup)
+    assert len(sent_markup.inline_keyboard) == 2  # 1 product, 1 nav row
+    assert sent_markup.inline_keyboard[0][0].text == "Croissant ($2.50)"

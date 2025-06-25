@@ -165,14 +165,15 @@ async def handle_add_to_cart(
 
 async def handle_close_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handles the 'close_shop' callback by ending the interaction."""
-    
+
     query = update.callback_query
-    
+
     # Acknowledge the button press
-    await query.answer()  
+    await query.answer()
     await query.edit_message_text(
         # This removes the keyboard
-        text="Shopping session ended.", reply_markup=None
+        text="Shopping session ended.",
+        reply_markup=None,
     )
 
 
@@ -182,10 +183,10 @@ async def handle_back_to_categories(
     """Handles the 'Back to Categories' button click by re-displaying the categorie list."""
     query = update.callback_query
     await query.answer()
-    
+
     persistence: AbstractPantryPersistence = context.bot_data["persistence"]
     categories = await persistence.get_all_categories()
-    
+
     keyboard = []
     for category in categories:
         keyboard.append(
@@ -223,4 +224,9 @@ close_shop_handler = CallbackQueryHandler(handle_close_shop, pattern="^close_sho
 
 back_to_categories_handler = CallbackQueryHandler(
     handle_back_to_categories, pattern="^navigate_to_categories$"
+)
+
+
+back_to_products_handler = CallbackQueryHandler(
+    handle_category_selection, pattern="^navigate_to_products_(.+)"
 )

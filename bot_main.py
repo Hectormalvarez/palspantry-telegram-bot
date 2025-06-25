@@ -12,6 +12,7 @@ from handlers.customer.shop import (
     add_to_cart_handler,
     close_shop_handler,
     back_to_categories_handler,
+    back_to_products_handler,
 )
 from persistence.in_memory_persistence import InMemoryPersistence
 
@@ -36,6 +37,7 @@ def main() -> None:
     application.add_handler(add_to_cart_handler)
     application.add_handler(close_shop_handler)
     application.add_handler(back_to_categories_handler)
+    application.add_handler(back_to_products_handler)
 
     logger.info("Bot application built and handlers added. Starting polling...")
 
