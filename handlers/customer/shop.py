@@ -176,6 +176,30 @@ async def handle_close_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     )
 
 
+async def handle_back_to_categories(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Handles the 'Back to Categories' button click by re-displaying the categorie list."""
+    query = update.callback_query
+    await query.answer()
+    
+    persistence: AbstractPantryPersistence = context.bot_data["persistence"]
+    categories = await persistence.get_all_categories()
+    
+    keyboard = []
+    for category in categories:
+        keyboard.append(
+            [InlineKeyboardButton(category, callback_data=f"category_{category}")]
+        )
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await query.edit_message_text(
+        text="Welcome to the shop! Please select a category to browse:",
+        reply_markup=reply_markup,
+    )
+
+
 shop_start_handler = CommandHandler("shop", shop_start)
 
 
@@ -195,3 +219,8 @@ add_to_cart_handler = CallbackQueryHandler(
 
 
 close_shop_handler = CallbackQueryHandler(handle_close_shop, pattern="^close_shop$")
+
+
+back_to_categories_handler = CallbackQueryHandler(
+    handle_back_to_categories, pattern="^navigate_to_categories$"
+)

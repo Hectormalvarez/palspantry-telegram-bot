@@ -299,3 +299,43 @@ async def test_handle_close_shop(
         text="Shopping session ended.",
         reply_markup=None, # Asserts the keyboard is removed
     )
+
+
+@pytest.mark.asyncio
+async def test_handle_back_to_categories(
+    mocker,
+    mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
+    """Test 'Back to Categories' callback displays the category list."""
+    # Arrange
+    query = mock_update_callback_query.callback_query
+    query.data = "navigate_to_categories"
+
+    # Mock the persistence layer to return some categories
+    mock_categories = ["Bakery", "Drinks"]
+    mock_persistence_layer.get_all_categories.return_value = mock_categories
+
+    # Act
+    # This function doesn't exist yet, which will cause the test to fail.
+    await shop.handle_back_to_categories(mock_update_callback_query, mock_telegram_context)
+
+    # Assert
+    query.answer.assert_called_once()
+    mock_persistence_layer.get_all_categories.assert_called_once()
+    
+    # Assert that the message is edited to show the category list
+    query.edit_message_text.assert_called_once_with(
+        text="Welcome to the shop! Please select a category to browse:",
+        reply_markup=ANY,
+    )
+    
+    # Verify the keyboard is correct
+    sent_markup = query.edit_message_text.call_args.kwargs.get("reply_markup")
+    assert isinstance(sent_markup, InlineKeyboardMarkup)
+    assert len(sent_markup.inline_keyboard) == 2  # 2 categories
+    assert sent_markup.inline_keyboard[0][0].text == "Bakery"
+    assert sent_markup.inline_keyboard[0][0].callback_data == "category_Bakery"
+    assert sent_markup.inline_keyboard[1][0].text == "Drinks"
+    assert sent_markup.inline_keyboard[1][0].callback_data == "category_Drinks"
