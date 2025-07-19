@@ -28,7 +28,7 @@ async def shop_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         keyboard.append(
             [InlineKeyboardButton(category, callback_data=f"category_{category}")]
         )
-
+    keyboard.append([InlineKeyboardButton("❌ Close", callback_data="close_shop")])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
@@ -171,8 +171,7 @@ async def handle_close_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     # Acknowledge the button press
     await query.answer()
     await query.edit_message_text(
-        # This removes the keyboard
-        text="Shopping session ended.",
+        text="Shop closed. Thanks for visiting!",
         reply_markup=None,
     )
 
@@ -192,6 +191,7 @@ async def handle_back_to_categories(
         keyboard.append(
             [InlineKeyboardButton(category, callback_data=f"category_{category}")]
         )
+    keyboard.append([InlineKeyboardButton("❌ Close", callback_data="close_shop")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 

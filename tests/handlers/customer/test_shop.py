@@ -35,9 +35,15 @@ async def test_shop_start_with_categories(
         "reply_markup"
     )
     assert isinstance(sent_markup, InlineKeyboardMarkup)
-    assert len(sent_markup.inline_keyboard) == 2  # 2 rows
+    assert len(sent_markup.inline_keyboard) == 3
     assert sent_markup.inline_keyboard[0][0].text == "Bakery"
     assert sent_markup.inline_keyboard[1][0].text == "Drinks"
+    
+    # Check the new close button row
+    close_row = sent_markup.inline_keyboard[2]
+    assert len(close_row) == 1
+    assert close_row[0].text == "❌ Close"
+    assert close_row[0].callback_data == "close_shop"
 
 
 @pytest.mark.asyncio
@@ -334,11 +340,15 @@ async def test_handle_back_to_categories(
     # Verify the keyboard is correct
     sent_markup = query.edit_message_text.call_args.kwargs.get("reply_markup")
     assert isinstance(sent_markup, InlineKeyboardMarkup)
-    assert len(sent_markup.inline_keyboard) == 2  # 2 categories
+    assert len(sent_markup.inline_keyboard) == 3 # 2 categories, 1 close button
     assert sent_markup.inline_keyboard[0][0].text == "Bakery"
     assert sent_markup.inline_keyboard[0][0].callback_data == "category_Bakery"
     assert sent_markup.inline_keyboard[1][0].text == "Drinks"
     assert sent_markup.inline_keyboard[1][0].callback_data == "category_Drinks"
+    close_row = sent_markup.inline_keyboard[2]
+    assert len(close_row) == 1
+    assert close_row[0].text == "❌ Close"
+    assert close_row[0].callback_data == "close_shop"
 
 
 @pytest.mark.asyncio
@@ -354,7 +364,7 @@ async def test_handle_back_to_products(
     category_name = "Bakery"
     # This callback will be handled by the same function as "category_Bakery"
     query.data = f"navigate_to_products_{category_name}"
-    
+
     # We must simulate the regex match that the CallbackQueryHandler performs.
     # The handler will find `Bakery` and store it in `context.matches`.
     mock_match = mocker.MagicMock()
@@ -383,3 +393,24 @@ async def test_handle_back_to_products(
     assert isinstance(sent_markup, InlineKeyboardMarkup)
     assert len(sent_markup.inline_keyboard) == 2  # 1 product, 1 nav row
     assert sent_markup.inline_keyboard[0][0].text == "Croissant ($2.50)"
+
+
+@pytest.mark.asyncio
+async def test_handle_close_shop(
+    mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+):
+    """Test that the close_shop callback deletes the message."""
+    # Arrange
+    query = mock_update_callback_query.callback_query
+    query.data = "close_shop"
+
+    # Act
+    await shop.handle_close_shop(mock_update_callback_query, mock_telegram_context)
+
+    # Assert
+    query.answer.assert_called_once()
+    query.edit_message_text.assert_called_once_with(
+        text="Shop closed. Thanks for visiting!",
+        reply_markup=None  # Explicitly check that the keyboard is removed
+    )
