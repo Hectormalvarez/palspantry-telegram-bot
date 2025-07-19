@@ -1,7 +1,7 @@
 from unittest.mock import AsyncMock  # Needed for the AsyncMock type hint
 
 import pytest
-from telegram import Update
+from telegram import Update, User
 from telegram.ext import ContextTypes
 
 # Import your persistence abstraction for type hinting
@@ -42,3 +42,17 @@ def mock_update_message(mocker) -> AsyncMock:  # type hint uses unittest.mock.As
     update.message = mocker.AsyncMock()
     update.message.reply_text = mocker.AsyncMock()
     return update
+
+
+@pytest.fixture
+def mock_update_callback_query(mocker) -> AsyncMock:
+    """
+    Provides a mock Update object representing a callback query from an inline button.
+    """
+    update = mocker.AsyncMock(spec=Update)
+    update.callback_query = mocker.AsyncMock()
+    update.callback_query.answer = mocker.AsyncMock()
+    update.callback_query.edit_message_text = mocker.AsyncMock()
+    update.callback_query.message = mocker.AsyncMock()
+    update.effective_user = mocker.MagicMock(spec=User, id=98765)
+    return update 
