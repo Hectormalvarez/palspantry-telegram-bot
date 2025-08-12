@@ -5,6 +5,7 @@ from telegram.ext import ApplicationBuilder
 import config
 from handlers.owner.set_owner import set_owner_handler
 from handlers.product.add_product import get_add_product_handler
+from handlers.customer.cart import cart_handler
 from handlers.customer.shop import (
     shop_start_handler,
     category_selection_handler,
@@ -23,7 +24,6 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     """Start the bot."""
     logger.info("Starting bot...")
-
     persistence_instance = InMemoryPersistence()
 
     application = ApplicationBuilder().token(config.BOT_TOKEN).build()
@@ -38,11 +38,10 @@ def main() -> None:
     application.add_handler(close_shop_handler)
     application.add_handler(back_to_categories_handler)
     application.add_handler(back_to_products_handler)
-
+    application.add_handler(cart_handler)
     logger.info("Bot application built and handlers added. Starting polling...")
 
     application.run_polling()
-
     logger.info("Bot polling stopped.")
 
 
