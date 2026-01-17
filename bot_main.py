@@ -14,21 +14,27 @@ from handlers.customer.shop import (
     back_to_categories_handler,
     back_to_products_handler,
 )
-from persistence.in_memory_persistence import InMemoryPersistence
+from persistence.sqlite_persistence import SQLitePersistence
 
 
 logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    """Start the bot."""
+    """
+    Start the bot.
+
+    Initializes the SQLite persistence layer and registers all handlers.
+    """
     logger.info("Starting bot...")
 
-    persistence_instance = InMemoryPersistence()
+    # Initialize Persistence (creates pals_pantry.db if missing)
+    persistence_instance = SQLitePersistence()
 
     application = ApplicationBuilder().token(config.BOT_TOKEN).build()
     application.bot_data["persistence"] = persistence_instance
 
+    # Register Handlers
     application.add_handler(set_owner_handler)
     application.add_handler(get_add_product_handler())
     application.add_handler(shop_start_handler)
