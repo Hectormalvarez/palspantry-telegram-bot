@@ -19,6 +19,9 @@
 * **Formatting:** Follow `black` and `pylint` configurations present in the repo.
 * **Type Hinting:** Required for all function signatures. Use `typing` module (e.g., `list[dict[str, Any]]`).
 * **No ORMs:** Do not introduce SQLAlchemy or Django ORM. Write raw, parameterized SQL queries for simplicity and performance.
+* **Context Hygiene:**
+    * `docs/ai/03_CURRENT_STATE.md` MUST be updated at the end of every significant feature or session.
+    * Do not leave the state as "Working on X" if X was completed.
 
 ## 4. Documentation & Comments
 * **Docstring Style:** MUST use **Google Style** docstrings for all functions and classes.
@@ -41,12 +44,10 @@ def calculate_total(price: int, quantity: int) -> int:
         int: The total cost.
     """
     return price * quantity
-
 ```
 
-## 5. Testing
+##  5. Testing
 
-* **Framework:** `pytest` with `pytest-asyncio`.
-* **Mocking:** Use `unittest.mock` to mock the Persistence Layer when testing Handlers.
+    Framework: pytest with pytest-asyncio.
 
----
+    Mocking: Use unittest.mock to mock the Persistence Layer when testing Handlers.
