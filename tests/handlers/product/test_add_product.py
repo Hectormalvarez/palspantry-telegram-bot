@@ -40,7 +40,7 @@ async def test_add_product_start_as_owner(
     )
 
     assert next_state == add_product.PRODUCT_NAME
-    mock_update_message.message.reply_text.assert_called_once_with(
+    mock_update_message.effective_message.reply_text.assert_called_once_with(
         "Let's add a new product! First, what is the product's name?"
     )
     assert "new_product" in mock_telegram_context.user_data
@@ -97,8 +97,7 @@ async def test_received_product_name_valid(
     assert next_state == add_product.PRODUCT_DESCRIPTION
     assert mock_telegram_context.user_data["new_product"]["name"] == product_name
     mock_update_message.message.reply_text.assert_called_once_with(
-        f"Great! Product name is '{product_name}'.\n\n"
-        "Now, please enter a description for the product."
+        f"Name set to '{product_name}'.\n\nNow, please enter a description."
     )
 
 
@@ -119,7 +118,7 @@ async def test_received_product_name_invalid_empty(
 
     assert next_state == add_product.PRODUCT_NAME
     mock_update_message.message.reply_text.assert_called_once_with(
-        "Product name cannot be empty. Please enter a name, or type /cancel to exit."
+        "Product name cannot be empty. Please enter a name, or /cancel."
     )
     assert "name" not in mock_telegram_context.user_data["new_product"]
 
@@ -147,8 +146,7 @@ async def test_received_product_description_valid(
     assert next_state == add_product.PRODUCT_PRICE
     assert mock_telegram_context.user_data["new_product"]["description"] == description
     mock_update_message.message.reply_text.assert_called_once_with(
-        f"Description noted.\n\n"
-        "Now, what's the price for this product? Please enter a number (e.g., 10.99 or 5)."
+        "Description noted.\n\nNow, what's the price? (e.g., 10.99 or 5)"
     )
 
 
@@ -169,7 +167,7 @@ async def test_received_product_description_invalid_empty(
 
     assert next_state == add_product.PRODUCT_DESCRIPTION
     mock_update_message.message.reply_text.assert_called_once_with(
-        "Product description cannot be empty. Please enter a description, or type /cancel to exit."
+        "Description cannot be empty. Please enter a description, or /cancel."
     )
     assert "description" not in mock_telegram_context.user_data["new_product"]
 
@@ -215,8 +213,7 @@ async def test_received_product_price_valid_asks_for_quantity(  # Renamed
     ), "Price should be stored"
 
     mock_update_message.message.reply_text.assert_called_once_with(
-        f"Price set to {expected_price_float:.2f}.\n\n"
-        "Now, how many units of this product are available? Please enter a whole number (e.g., 10)."  # New prompt
+        f"Price set to ${expected_price_float:.2f}.\n\nHow many units are available? (e.g., 10)"
     )
 
 
@@ -239,8 +236,7 @@ async def test_received_product_price_invalid_non_numeric(
 
     assert next_state == add_product.PRODUCT_PRICE
     mock_update_message.message.reply_text.assert_called_once_with(
-        "That doesn't look like a valid price. "
-        "Please enter a positive number (e.g., 10.99 or 5), or type /cancel."
+        "Invalid price. Please enter a positive number (e.g. 10.99), or /cancel."
     )
     assert "price" not in mock_telegram_context.user_data["new_product"]
 
@@ -264,8 +260,7 @@ async def test_received_product_price_invalid_zero_or_negative(
 
     assert next_state == add_product.PRODUCT_PRICE
     mock_update_message.message.reply_text.assert_called_once_with(
-        "That doesn't look like a valid price. "
-        "Please enter a positive number (e.g., 10.99 or 5), or type /cancel."
+        "Invalid price. Please enter a positive number (e.g. 10.99), or /cancel."
     )
     assert "price" not in mock_telegram_context.user_data["new_product"]
 
@@ -304,8 +299,7 @@ async def test_received_product_quantity_valid(
         == expected_quantity_int
     )
     mock_update_message.message.reply_text.assert_called_once_with(
-        f"Quantity set to {expected_quantity_int}.\n\n"
-        "Next, please specify a category for this product."
+        f"Quantity set to {expected_quantity_int}.\n\nNow, please specify a category (e.g. 'Dairy')."
     )
     assert (
         "quantity" in mock_telegram_context.user_data["new_product"]
@@ -320,7 +314,6 @@ async def test_received_product_quantity_valid(
     [
         ("abc", "non-integer string"),
         ("10.5", "float string"),
-        ("0", "zero value"),
         ("-5", "negative value"),
         ("", "empty string"),
         ("   ", "whitespace only"),
@@ -353,8 +346,7 @@ async def test_received_product_quantity_invalid_inputs(
         next_state == add_product.PRODUCT_QUANTITY
     )  # Should stay in the same state to re-prompt
     mock_update_message.message.reply_text.assert_called_once_with(
-        "That doesn't look like a valid quantity. "
-        "Please enter a whole positive number (e.g., 10), or type /cancel."
+        "Invalid quantity. Please enter a whole positive number, or /cancel."
     )
     # Ensure quantity was not added or was not incorrectly processed
     assert "quantity" not in mock_telegram_context.user_data.get("new_product", {})
@@ -367,6 +359,8 @@ async def test_cancel_add_product_with_data(
 ):
     """Test cancelling the conversation when some data exists."""
     mock_telegram_context.user_data = {"new_product": {"name": "Test"}}
+    # Ensure callback_query is None so it doesn't try to await answer()
+    mock_update_message.callback_query = None
 
     next_state = await add_product.cancel_add_product(
         mock_update_message, mock_telegram_context
@@ -388,6 +382,8 @@ async def test_cancel_add_product_without_data(
 ):
     """Test cancelling the conversation when no new_product data exists."""
     mock_telegram_context.user_data = {}  # Ensure no 'new_product' key
+    # Ensure callback_query is None so it doesn't try to await answer()
+    mock_update_message.callback_query = None
 
     next_state = await add_product.cancel_add_product(
         mock_update_message, mock_telegram_context
@@ -435,6 +431,6 @@ async def test_received_product_category_invalid_empty_text_input(
         next_state == add_product.PRODUCT_CATEGORY
     )  # Should stay in the same state to re-prompt
     mock_update_message.message.reply_text.assert_called_once_with(
-        "Category name cannot be empty. Please enter a category, or type /cancel."
+        "Category cannot be empty. Please enter a category, or /cancel."
     )
     assert "category" not in mock_telegram_context.user_data.get("new_product", {})

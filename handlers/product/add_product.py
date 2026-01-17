@@ -133,7 +133,7 @@ async def received_product_category(
         return PRODUCT_CATEGORY
 
     context.user_data["new_product"]["category"] = cat.strip()
-    
+
     await update.message.reply_text(
         "Category set.\n\n"
         "Finally, please send a photo of the product.\n"
@@ -146,20 +146,18 @@ async def received_product_image(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """Stores the file_id of the largest available photo size."""
-    photo_file = update.message.photo[-1] # Get the largest size
+    photo_file = update.message.photo[-1]  # Get the largest size
     context.user_data["new_product"]["image_file_id"] = photo_file.file_id
-    
+
     await _send_confirmation(update, context)
     return PRODUCT_CONFIRMATION
 
 
-async def skip_product_image(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> int:
+async def skip_product_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Sets image_file_id to None and proceeds."""
     context.user_data["new_product"]["image_file_id"] = None
     await update.message.reply_text("No image added.")
-    
+
     await _send_confirmation(update, context)
     return PRODUCT_CONFIRMATION
 
@@ -167,7 +165,7 @@ async def skip_product_image(
 async def _send_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Helper to display the confirmation summary."""
     p = context.user_data["new_product"]
-    
+
     summary = (
         "<b>Confirm New Product:</b>\n\n"
         f"<b>Name:</b> {p.get('name')}\n"
@@ -181,13 +179,17 @@ async def _send_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     keyboard = [
         [
-            InlineKeyboardButton("✅ Confirm & Save", callback_data="product_confirm_save"),
+            InlineKeyboardButton(
+                "✅ Confirm & Save", callback_data="product_confirm_save"
+            ),
             InlineKeyboardButton("❌ Cancel", callback_data="product_confirm_cancel"),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(summary, reply_markup=reply_markup, parse_mode="HTML")
+    await update.message.reply_text(
+        summary, reply_markup=reply_markup, parse_mode="HTML"
+    )
 
 
 async def handle_product_save_confirmed(
@@ -217,7 +219,7 @@ async def handle_product_save_confirmed(
 async def cancel_add_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancels the conversation. Handles both /cancel command and 'Cancel' button."""
     context.user_data.pop("new_product", None)
-    
+
     # Check if this came from a button click (CallbackQuery)
     if update.callback_query:
         await update.callback_query.answer()
@@ -238,18 +240,38 @@ def get_add_product_handler() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[CommandHandler("addproduct", add_product_start)],
         states={
-            PRODUCT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_name)],
-            PRODUCT_DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_description)],
-            PRODUCT_PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_price)],
-            PRODUCT_QUANTITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_quantity)],
-            PRODUCT_CATEGORY: [MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_category)],
+            PRODUCT_NAME: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_name)
+            ],
+            PRODUCT_DESCRIPTION: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, received_product_description
+                )
+            ],
+            PRODUCT_PRICE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, received_product_price)
+            ],
+            PRODUCT_QUANTITY: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, received_product_quantity
+                )
+            ],
+            PRODUCT_CATEGORY: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, received_product_category
+                )
+            ],
             PRODUCT_IMAGE: [
                 MessageHandler(filters.PHOTO, received_product_image),
-                CommandHandler("skip", skip_product_image)
+                CommandHandler("skip", skip_product_image),
             ],
             PRODUCT_CONFIRMATION: [
-                CallbackQueryHandler(handle_product_save_confirmed, pattern="^product_confirm_save$"),
-                CallbackQueryHandler(cancel_add_product, pattern="^product_confirm_cancel$"),
+                CallbackQueryHandler(
+                    handle_product_save_confirmed, pattern="^product_confirm_save$"
+                ),
+                CallbackQueryHandler(
+                    cancel_add_product, pattern="^product_confirm_cancel$"
+                ),
             ],
         },
         fallbacks=[CommandHandler("cancel", cancel_add_product)],

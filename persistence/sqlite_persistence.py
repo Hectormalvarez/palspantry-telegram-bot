@@ -196,9 +196,7 @@ class SQLitePersistence(AbstractPantryPersistence):
                     "INSERT INTO system_config (key, value) VALUES ('owner_id', ?)",
                     (str(user_id),),
                 )
-                conn.execute(
-                    "INSERT OR IGNORE INTO users (id) VALUES (?)", (user_id,)
-                )
+                conn.execute("INSERT OR IGNORE INTO users (id) VALUES (?)", (user_id,))
             return True
         except sqlite3.Error as e:
             logger.error(f"Error setting bot owner: {e}")
@@ -227,6 +225,16 @@ class SQLitePersistence(AbstractPantryPersistence):
         Returns:
             Optional[str]: The UUID of the new product, or None if failed.
         """
+        # Ensure essential fields exist
+        if not all(
+            k in product_data
+            for k in ["name", "description", "price", "quantity", "category"]
+        ):
+            logger.error(
+                f"Missing essential product data for add_product: {product_data}"
+            )
+            return None
+
         product_id = str(uuid.uuid4())
 
         try:

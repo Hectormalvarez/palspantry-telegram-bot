@@ -1,12 +1,11 @@
 from typing import Any  # For type hinting
 import pytest
-from persistence.in_memory_persistence import InMemoryPersistence
 
 
 @pytest.mark.asyncio
-async def test_in_memory_persistence_initial_state():
+async def test_in_memory_persistence_initial_state(sqlite_persistence_layer):
     """Test the initial state of InMemoryPersistence."""
-    persistence = InMemoryPersistence()
+    persistence = sqlite_persistence_layer
     assert (
         await persistence.get_bot_owner() is None
     ), "Initially, bot owner should be None"
@@ -16,9 +15,9 @@ async def test_in_memory_persistence_initial_state():
 
 
 @pytest.mark.asyncio
-async def test_in_memory_persistence_set_owner_first_time():
+async def test_in_memory_persistence_set_owner_first_time(sqlite_persistence_layer):
     """Test setting the bot owner for the first time."""
-    persistence = InMemoryPersistence()
+    persistence = sqlite_persistence_layer
     user_id = 12345
 
     # Set owner for the first time
@@ -33,9 +32,11 @@ async def test_in_memory_persistence_set_owner_first_time():
 
 
 @pytest.mark.asyncio
-async def test_in_memory_persistence_set_owner_when_already_set():
+async def test_in_memory_persistence_set_owner_when_already_set(
+    sqlite_persistence_layer,
+):
     """Test attempting to set the bot owner when one is already set."""
-    persistence = InMemoryPersistence()
+    persistence = sqlite_persistence_layer
     initial_owner_id = 12345
     second_user_id = 67890
 
@@ -53,9 +54,11 @@ async def test_in_memory_persistence_set_owner_when_already_set():
 
 
 @pytest.mark.asyncio
-async def test_in_memory_persistence_set_owner_with_same_id_when_already_set():
+async def test_in_memory_persistence_set_owner_with_same_id_when_already_set(
+    sqlite_persistence_layer,
+):
     """Test attempting to set the bot owner with the same ID when one is already set."""
-    persistence = InMemoryPersistence()
+    persistence = sqlite_persistence_layer
     owner_id = 12345
 
     # Set initial owner
@@ -73,9 +76,9 @@ async def test_in_memory_persistence_set_owner_with_same_id_when_already_set():
 
 
 @pytest.mark.asyncio
-async def test_in_memory_persistence_is_owner_set_transitions():
+async def test_in_memory_persistence_is_owner_set_transitions(sqlite_persistence_layer):
     """Test the is_owner_set method transitions correctly."""
-    persistence = InMemoryPersistence()
+    persistence = sqlite_persistence_layer
     assert not await persistence.is_owner_set(), "is_owner_set is False initially"
 
     await persistence.set_bot_owner(123)
@@ -83,9 +86,11 @@ async def test_in_memory_persistence_is_owner_set_transitions():
 
 
 @pytest.mark.asyncio
-async def test_in_memory_persistence_get_bot_owner_transitions():
+async def test_in_memory_persistence_get_bot_owner_transitions(
+    sqlite_persistence_layer,
+):
     """Test the get_bot_owner method transitions correctly."""
-    persistence = InMemoryPersistence()
+    persistence = sqlite_persistence_layer
     assert await persistence.get_bot_owner() is None, "get_bot_owner is None initially"
 
     owner_id = 987
@@ -115,8 +120,8 @@ def _create_sample_product_data(
 
 
 @pytest.mark.asyncio
-async def test_add_product_successfully():
-    persistence = InMemoryPersistence()
+async def test_add_product_successfully(sqlite_persistence_layer):
+    persistence = sqlite_persistence_layer
     product_data = _create_sample_product_data()
     product_id = await persistence.add_product(product_data)
 
@@ -131,8 +136,8 @@ async def test_add_product_successfully():
 
 
 @pytest.mark.asyncio
-async def test_add_product_missing_essential_data():
-    persistence = InMemoryPersistence()
+async def test_add_product_missing_essential_data(sqlite_persistence_layer):
+    persistence = sqlite_persistence_layer
     # Missing 'price' which is essential based on our InMemoryPersistence check
     product_data = {"name": "Test Item", "quantity": 5, "category": "Test"}
     product_id = await persistence.add_product(product_data)
@@ -140,20 +145,20 @@ async def test_add_product_missing_essential_data():
 
 
 @pytest.mark.asyncio
-async def test_get_product_not_found():
-    persistence = InMemoryPersistence()
+async def test_get_product_not_found(sqlite_persistence_layer):
+    persistence = sqlite_persistence_layer
     assert await persistence.get_product("non_existent_id") is None
 
 
 @pytest.mark.asyncio
-async def test_get_all_products_empty():
-    persistence = InMemoryPersistence()
+async def test_get_all_products_empty(sqlite_persistence_layer):
+    persistence = sqlite_persistence_layer
     assert await persistence.get_all_products() == []
 
 
 @pytest.mark.asyncio
-async def test_get_all_products_with_items():
-    persistence = InMemoryPersistence()
+async def test_get_all_products_with_items(sqlite_persistence_layer):
+    persistence = sqlite_persistence_layer
     product_data1 = _create_sample_product_data(name="Milk")
     product_data2 = _create_sample_product_data(name="Bread", category="Bakery")
     id1 = await persistence.add_product(product_data1)

@@ -15,7 +15,7 @@ async def shop_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     # If this is called from a callback (Back button), we use edit_message_text
     # If called from a command (/shop), we use reply_text
     is_callback = bool(update.callback_query)
-    
+
     if is_callback:
         # If we are coming 'back' from a photo view, we must delete the photo and send new text
         # Checks if the message we are replacing was a photo
@@ -28,7 +28,9 @@ async def shop_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await _send_category_menu(update, context, send_new=not is_callback)
 
 
-async def _send_category_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, send_new: bool = False):
+async def _send_category_menu(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, send_new: bool = False
+):
     """Helper to render the category list."""
     persistence: AbstractPantryPersistence = context.bot_data["persistence"]
     categories = await persistence.get_all_categories()
@@ -47,37 +49,36 @@ async def _send_category_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     keyboard = []
     for category in categories:
-        keyboard.append([InlineKeyboardButton(category, callback_data=f"category_{category}")])
+        keyboard.append(
+            [InlineKeyboardButton(category, callback_data=f"category_{category}")]
+        )
     keyboard.append([InlineKeyboardButton("❌ Close", callback_data="close_shop")])
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
+
     text = "Welcome to PalsPantry! Select a category:"
 
     if send_new:
         chat_id = update.effective_chat.id
-        await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
+        await context.bot.send_message(
+            chat_id=chat_id, text=text, reply_markup=reply_markup
+        )
     else:
-        await update.callback_query.edit_message_text(text=text, reply_markup=reply_markup)
+        await update.callback_query.edit_message_text(
+            text=text, reply_markup=reply_markup
+        )
 
 
-async def handle_category_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_category_selection(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     query = update.callback_query
     await query.answer()
 
     # If we are coming back from a Product Detail (Photo), we need to delete the photo and send text
     if query.message.photo:
         await query.message.delete()
-        # We need to extract category from the button that was clicked? 
-        # Actually, the callback data contains the category: "navigate_to_products_Dairy"
-        # Or if clicking a category from start menu: "category_Dairy"
-        
-        # We need to parse the match again because we might be in a different flow
-        data = query.data
-        if data.startswith("category_"):
-            category_name = data.split("category_")[1]
-        elif data.startswith("navigate_to_products_"):
-            category_name = data.split("navigate_to_products_")[1]
-            
+        category_name = context.matches[0].group(1)
+
         await _send_product_list(update, context, category_name, send_new=True)
         return
 
@@ -86,7 +87,12 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
     await _send_product_list(update, context, category_name, send_new=False)
 
 
-async def _send_product_list(update: Update, context: ContextTypes.DEFAULT_TYPE, category_name: str, send_new: bool):
+async def _send_product_list(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    category_name: str,
+    send_new: bool,
+):
     persistence: AbstractPantryPersistence = context.bot_data["persistence"]
     products = await persistence.get_products_by_category(category_name)
 
@@ -101,24 +107,40 @@ async def _send_product_list(update: Update, context: ContextTypes.DEFAULT_TYPE,
     keyboard = []
     for product in products:
         button_text = f"{product['name']} (${product['price']:.2f})"
-        keyboard.append([InlineKeyboardButton(button_text, callback_data=f"product_{product['id']}")])
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    button_text, callback_data=f"product_{product['id']}"
+                )
+            ]
+        )
 
     # Navigation
-    keyboard.append([
-        InlineKeyboardButton("<< Back to Categories", callback_data="navigate_to_categories"),
-        InlineKeyboardButton("❌ Close", callback_data="close_shop")
-    ])
+    keyboard.append(
+        [
+            InlineKeyboardButton(
+                "<< Back to Categories", callback_data="navigate_to_categories"
+            ),
+            InlineKeyboardButton("❌ Close", callback_data="close_shop"),
+        ]
+    )
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     text = f"<b>{category_name}</b>"
-    
+
     if send_new:
-        await update.effective_chat.send_message(text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+        await update.effective_chat.send_message(
+            text, reply_markup=reply_markup, parse_mode=ParseMode.HTML
+        )
     else:
-        await update.callback_query.edit_message_text(text=text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+        await update.callback_query.edit_message_text(
+            text=text, reply_markup=reply_markup, parse_mode=ParseMode.HTML
+        )
 
 
-async def handle_product_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_product_selection(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Displays product details. Switches to Photo message if image exists."""
     query = update.callback_query
     await query.answer()
@@ -138,13 +160,20 @@ async def handle_product_selection(update: Update, context: ContextTypes.DEFAULT
         f"Price: <b>${product['price']:.2f}</b>\n"
         f"Stock: {product['quantity']} available"
     )
-    
+
     category = product.get("category", "Products")
-    
+
     keyboard = [
-        [InlineKeyboardButton("🛒 Add to Cart", callback_data=f"add_to_cart_{product_id}")],
         [
-            InlineKeyboardButton(f"<< Back to {category}", callback_data=f"navigate_to_products_{category}"),
+            InlineKeyboardButton(
+                "🛒 Add to Cart", callback_data=f"add_to_cart_{product_id}"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                f"<< Back to {category}",
+                callback_data=f"navigate_to_products_{category}",
+            ),
             InlineKeyboardButton("❌ Close", callback_data="close_shop"),
         ],
     ]
@@ -164,18 +193,22 @@ async def handle_product_selection(update: Update, context: ContextTypes.DEFAULT
             photo=image_id,
             caption=caption,
             parse_mode=ParseMode.HTML,
-            reply_markup=reply_markup
+            reply_markup=reply_markup,
         )
     else:
         # Fallback for products with no image
-        await query.edit_message_text(text=caption, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+        await query.edit_message_text(
+            text=caption, reply_markup=reply_markup, parse_mode=ParseMode.HTML
+        )
 
 
-async def handle_add_to_cart(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_add_to_cart(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     query = update.callback_query
     # We don't need to edit the message, just pop up a notification
     product_id = context.matches[0].group(1)
-    
+
     persistence: AbstractPantryPersistence = context.bot_data["persistence"]
     product = await persistence.get_product(product_id)
 
@@ -186,24 +219,30 @@ async def handle_add_to_cart(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Cart Logic (In Memory for now, moving to DB in Phase 3)
     cart = context.user_data.setdefault("cart", {})
     cart[product_id] = cart.get(product_id, 0) + 1
-    
+
     await query.answer(f"Added {product['name']} to cart! (Total: {cart[product_id]})")
 
 
 async def handle_close_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
-    
+
     # Check if we are closing a photo message
     if query.message.photo:
         await query.message.delete()
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Shop closed. See you soon!")
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id, text="Shop closed. See you soon!"
+        )
     else:
         await query.edit_message_text("Shop closed. See you soon!", reply_markup=None)
 
 
-async def handle_back_to_categories(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_back_to_categories(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handles 'Back to Categories'. Compatible with both Photo and Text origins."""
+    query = update.callback_query
+    await query.answer()
     await shop_start(update, context)
 
 
@@ -211,10 +250,20 @@ async def handle_back_to_categories(update: Update, context: ContextTypes.DEFAUL
 # Note: We need to register these in bot_main.py, but using the variables exported here.
 
 shop_start_handler = CommandHandler("shop", shop_start)
-category_selection_handler = CallbackQueryHandler(handle_category_selection, pattern="^category_(.+)")
-product_selection_handler = CallbackQueryHandler(handle_product_selection, pattern="^product_(.+)")
-add_to_cart_handler = CallbackQueryHandler(handle_add_to_cart, pattern="^add_to_cart_(.+)")
+category_selection_handler = CallbackQueryHandler(
+    handle_category_selection, pattern="^category_(.+)"
+)
+product_selection_handler = CallbackQueryHandler(
+    handle_product_selection, pattern="^product_(.+)"
+)
+add_to_cart_handler = CallbackQueryHandler(
+    handle_add_to_cart, pattern="^add_to_cart_(.+)"
+)
 close_shop_handler = CallbackQueryHandler(handle_close_shop, pattern="^close_shop$")
-back_to_categories_handler = CallbackQueryHandler(handle_back_to_categories, pattern="^navigate_to_categories$")
+back_to_categories_handler = CallbackQueryHandler(
+    handle_back_to_categories, pattern="^navigate_to_categories$"
+)
 # Regex Updated to capture the category name for the Back button logic
-back_to_products_handler = CallbackQueryHandler(handle_category_selection, pattern="^navigate_to_products_(.+)")
+back_to_products_handler = CallbackQueryHandler(
+    handle_category_selection, pattern="^navigate_to_products_(.+)"
+)

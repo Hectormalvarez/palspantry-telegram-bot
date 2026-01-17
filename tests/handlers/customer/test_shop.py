@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import ANY
 
 from telegram import Update, User, InlineKeyboardMarkup
+from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 from handlers.customer import shop
@@ -18,7 +19,9 @@ async def test_shop_start_with_categories(
     """Test /shop command when categories exist."""
     # Arrange
     mock_update_message.effective_user = mocker.MagicMock(spec=User, id=98765)
+    mock_update_message.callback_query = None  # Ensure it's treated as a command
     mock_categories = ["Bakery", "Drinks"]
+    mock_telegram_context.bot.send_message = mocker.AsyncMock()
     mock_persistence_layer.get_all_categories.return_value = mock_categories
 
     # Act
@@ -26,19 +29,15 @@ async def test_shop_start_with_categories(
 
     # Assert
     mock_persistence_layer.get_all_categories.assert_called_once()
-    mock_update_message.message.reply_text.assert_called_once_with(
-        "Welcome to the shop! Please select a category to browse:",
-        reply_markup=ANY,
-    )
     # Check that the call included a keyboard
-    sent_markup = mock_update_message.message.reply_text.call_args.kwargs.get(
-        "reply_markup"
-    )
+    call_args = mock_telegram_context.bot.send_message.call_args
+    assert call_args.kwargs["text"] == "Welcome to PalsPantry! Select a category:"
+    sent_markup = call_args.kwargs["reply_markup"]
     assert isinstance(sent_markup, InlineKeyboardMarkup)
     assert len(sent_markup.inline_keyboard) == 3
     assert sent_markup.inline_keyboard[0][0].text == "Bakery"
     assert sent_markup.inline_keyboard[1][0].text == "Drinks"
-    
+
     # Check the new close button row
     close_row = sent_markup.inline_keyboard[2]
     assert len(close_row) == 1
@@ -56,6 +55,7 @@ async def test_shop_start_no_categories(
     """Test /shop command when the shop is empty."""
     # Arrange
     mock_update_message.effective_user = mocker.MagicMock(spec=User, id=98765)
+    mock_update_message.callback_query = None  # Ensure it's treated as a command
     mock_persistence_layer.get_all_categories.return_value = []
 
     # Act
@@ -105,7 +105,9 @@ async def test_handle_category_selection_with_products(
 
     # Assert that the bot replies with buttons
     mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
-        text=f"Products in {category_name}:", reply_markup=ANY
+        text=f"<b>{category_name}</b>",
+        reply_markup=ANY,
+        parse_mode=ParseMode.HTML,
     )
     sent_markup = mock_update_callback_query.callback_query.edit_message_text.call_args.kwargs.get(
         "reply_markup"
@@ -156,9 +158,9 @@ async def test_handle_category_selection_no_products(
         category_name
     )
 
-    expected_text = "There are currently no products available in this category."
+    expected_text = "No products here."
     mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
-        text=expected_text
+        expected_text
     )
 
 
@@ -186,37 +188,46 @@ async def test_handle_product_selection(
         "description": "A flaky, buttery pastry.",
         "price": 2.50,
         "category": category_name,
+        "quantity": 10,  # <--- NEW LINE ADDED
     }
     mock_persistence_layer.get_product.return_value = mock_product
 
     # Act
-    await shop.handle_product_selection(mock_update_callback_query, mock_telegram_context)
+    await shop.handle_product_selection(
+        mock_update_callback_query, mock_telegram_context
+    )
 
     # Assert
     mock_update_callback_query.callback_query.answer.assert_called_once()
     mock_persistence_layer.get_product.assert_called_once_with(product_id)
 
     expected_text = (
-        f"Name: {mock_product['name']}\n"
-        f"Description: {mock_product['description']}\n"
-        f"Price: ${mock_product['price']:.2f}"
+        f"<b>{mock_product['name']}</b>\n"
+        f"<i>{mock_product.get('description', '')}</i>\n\n"
+        f"Price: <b>${mock_product['price']:.2f}</b>\n"
+        f"Stock: {mock_product['quantity']} available"
     )
     mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
         text=expected_text,
         reply_markup=ANY,
+        parse_mode=ParseMode.HTML,
     )
 
     # Check that the new keyboard is correct
-    sent_markup = mock_update_callback_query.callback_query.edit_message_text.call_args.kwargs.get("reply_markup")
+    sent_markup = mock_update_callback_query.callback_query.edit_message_text.call_args.kwargs.get(
+        "reply_markup"
+    )
     assert isinstance(sent_markup, InlineKeyboardMarkup)
     assert len(sent_markup.inline_keyboard) == 2  # Expect Two row of buttons
     assert sent_markup.inline_keyboard[0][0].text == "🛒 Add to Cart"
-    assert sent_markup.inline_keyboard[0][0].callback_data == f"add_to_cart_{product_id}"
-    
+    assert (
+        sent_markup.inline_keyboard[0][0].callback_data == f"add_to_cart_{product_id}"
+    )
+
     # Assert the navigation buttons are in the second row
     nav_row = sent_markup.inline_keyboard[1]
     assert len(nav_row) == 2
-    assert nav_row[0].text == f"<< Back to {category_name} Products"
+    assert nav_row[0].text == f"<< Back to {category_name}"
     assert nav_row[0].callback_data == f"navigate_to_products_{category_name}"
     assert nav_row[1].text == "❌ Close"
     assert nav_row[1].callback_data == "close_shop"
@@ -251,8 +262,9 @@ async def test_handle_add_to_cart_new_item(
     assert "cart" in mock_telegram_context.user_data
     assert mock_telegram_context.user_data["cart"] == {product_id: 1}
     # Check that the user received a confirmation pop-up
+    # Remove 'text=' keyword argument as the implementation uses positional args
     mock_update_callback_query.callback_query.answer.assert_called_once_with(
-        text="Croissant added to cart!"
+        "Added Croissant to cart! (Total: 1)"
     )
 
 
@@ -282,8 +294,9 @@ async def test_handle_add_to_cart_existing_item(
     # Assert
     # Check that the quantity was incremented
     assert mock_telegram_context.user_data["cart"][product_id] == 3
+    # Remove 'text=' keyword argument
     mock_update_callback_query.callback_query.answer.assert_called_once_with(
-        text="Croissant added to cart!"
+        "Added Croissant to cart! (Total: 3)"
     )
 
 
@@ -295,15 +308,15 @@ async def test_handle_close_shop(
     # Arrange
     query = mock_update_callback_query.callback_query
     query.data = "close_shop"
-        
+
     # Act
     await shop.handle_close_shop(mock_update_callback_query, None)
-    
+
     # Assert
     query.answer.assert_called_once()
     query.edit_message_text.assert_called_once_with(
-        text="Shopping session ended.",
-        reply_markup=None, # Asserts the keyboard is removed
+        "Shop closed. See you soon!",
+        reply_markup=None,  # Asserts the keyboard is removed
     )
 
 
@@ -325,22 +338,24 @@ async def test_handle_back_to_categories(
 
     # Act
     # This function doesn't exist yet, which will cause the test to fail.
-    await shop.handle_back_to_categories(mock_update_callback_query, mock_telegram_context)
+    await shop.handle_back_to_categories(
+        mock_update_callback_query, mock_telegram_context
+    )
 
     # Assert
     query.answer.assert_called_once()
     mock_persistence_layer.get_all_categories.assert_called_once()
-    
+
     # Assert that the message is edited to show the category list
     query.edit_message_text.assert_called_once_with(
-        text="Welcome to the shop! Please select a category to browse:",
+        text="Welcome to PalsPantry! Select a category:",
         reply_markup=ANY,
     )
-    
+
     # Verify the keyboard is correct
     sent_markup = query.edit_message_text.call_args.kwargs.get("reply_markup")
     assert isinstance(sent_markup, InlineKeyboardMarkup)
-    assert len(sent_markup.inline_keyboard) == 3 # 2 categories, 1 close button
+    assert len(sent_markup.inline_keyboard) == 3  # 2 categories, 1 close button
     assert sent_markup.inline_keyboard[0][0].text == "Bakery"
     assert sent_markup.inline_keyboard[0][0].callback_data == "category_Bakery"
     assert sent_markup.inline_keyboard[1][0].text == "Drinks"
@@ -376,11 +391,12 @@ async def test_handle_back_to_products(
         {"id": "prod_123", "name": "Croissant", "price": 2.50},
     ]
     mock_persistence_layer.get_products_by_category.return_value = mock_products
-    
-    
+
     # Act
     # We call the *existing* function to confirm it works for this case.
-    await shop.handle_category_selection(mock_update_callback_query, mock_telegram_context)
+    await shop.handle_category_selection(
+        mock_update_callback_query, mock_telegram_context
+    )
 
     # Assert
     query.answer.assert_called_once()
@@ -411,6 +427,6 @@ async def test_handle_close_shop(
     # Assert
     query.answer.assert_called_once()
     query.edit_message_text.assert_called_once_with(
-        text="Shop closed. Thanks for visiting!",
-        reply_markup=None  # Explicitly check that the keyboard is removed
+        "Shop closed. See you soon!",
+        reply_markup=None,  # Explicitly check that the keyboard is removed
     )
