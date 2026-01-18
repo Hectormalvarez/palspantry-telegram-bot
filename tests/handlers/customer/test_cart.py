@@ -33,6 +33,7 @@ async def test_handle_cart_command_empty(
     assert isinstance(sent_markup, InlineKeyboardMarkup)
     assert len(sent_markup.inline_keyboard) == 1
     assert sent_markup.inline_keyboard[0][0].text == "Continue Shopping"
+    assert sent_markup.inline_keyboard[0][0].callback_data == "navigate_to_categories"
 
 
 @pytest.mark.asyncio
@@ -67,6 +68,9 @@ async def test_handle_cart_command_with_items(
     assert "Checkout" in button_texts
     assert "Clear Cart" in button_texts
     assert "Continue Shopping" in button_texts
+    # Find the Continue Shopping button and assert its callback_data
+    continue_button = next(btn for btn in buttons_row if btn.text == "Continue Shopping")
+    assert continue_button.callback_data == "navigate_to_categories"
 
 
 @pytest.mark.asyncio

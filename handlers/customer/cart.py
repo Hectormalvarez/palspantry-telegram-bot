@@ -19,7 +19,7 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not cart_items:
         # Empty cart
         text = "Your cart is empty."
-        keyboard = [[InlineKeyboardButton("Continue Shopping", callback_data="cart_continue_shopping")]]
+        keyboard = [[InlineKeyboardButton("Continue Shopping", callback_data="navigate_to_categories")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(text=text, reply_markup=reply_markup)
         return
@@ -46,7 +46,7 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         [
             InlineKeyboardButton("Checkout", callback_data="cart_checkout"),
             InlineKeyboardButton("Clear Cart", callback_data="clear_cart"),
-            InlineKeyboardButton("Continue Shopping", callback_data="cart_continue_shopping"),
+            InlineKeyboardButton("Continue Shopping", callback_data="navigate_to_categories"),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
