@@ -23,9 +23,9 @@ This roadmap defines the critical path to a functional "Minimum Viable Product."
     * Clear the user's cart after successful order.
 
 ## Milestone 4.5: MVP Polish
-* [ ] User Guidance (/start and Help handlers).
+* [x] User Guidance (/start and Help handlers).
 * [ ] Enhanced Order Receipts (User summary).
-* [ ] Admin Notifications (Notify owner on purchase).
+* [x] Admin Notifications (Notify owner on purchase).
 * [ ] UI/UX Cleanup (Delete intermediate admin messages).
 
 ## Phase 4: The Owner Dashboard

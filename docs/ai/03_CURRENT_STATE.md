@@ -11,10 +11,11 @@
    * Completed End-to-End Order Transaction Loop.
    * Implemented /start handler with 'Shop Now' CTA.
    * Implemented Catch-all handler for unknown inputs.
-* **Current Task:** MVP Polish & User Experience Improvements
+   * Enriched Owner Notification with Item Details.
+   * Implemented /help command for user guidance.
+* **Current Task:** UI/UX Cleanup (Reducing chat clutter during navigation)
 * **Context:** We will create the order tables and the create_order method to handle transactions from cart to order.
 
 ## 2. Immediate Next Steps
 * Improve Checkout Receipt (Show summary, not just ID).
-* Enrich Owner Notification (Include item details).
 * Reduce chat clutter in Admin "Add Product" flow.

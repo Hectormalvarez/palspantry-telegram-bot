@@ -8,6 +8,10 @@ The initial MVP focuses on core product management for the shop owner and a brow
 
 ## Core Features (MVP Focus)
 
+### General
+
+* `/help`: View a list of available commands.
+
 ### For the Shop Owner (Bot Owner):
 * **Bot Ownership:** Securely designate a single bot owner via the `/set_owner` command (first user to issue becomes owner).
 * **Product Management:**
