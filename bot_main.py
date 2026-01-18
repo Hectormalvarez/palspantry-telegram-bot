@@ -16,7 +16,12 @@ from handlers.customer.shop import (
     back_to_products_handler,
     shop_home_callback_handler,
 )
-from handlers.customer.cart import cart_command_handler, clear_cart_handler, checkout_handler
+from handlers.customer.cart import (
+    cart_command_handler,
+    clear_cart_handler,
+    checkout_handler,
+)
+from handlers.general.unknown import unknown_handler
 from persistence.sqlite_persistence import SQLitePersistence
 
 
@@ -52,6 +57,7 @@ def main() -> None:
     application.add_handler(close_shop_handler)
     application.add_handler(back_to_categories_handler)
     application.add_handler(back_to_products_handler)
+    application.add_handler(unknown_handler)
 
     logger.info("Bot application built and handlers added. Starting polling...")
 
