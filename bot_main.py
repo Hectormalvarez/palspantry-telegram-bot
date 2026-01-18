@@ -14,6 +14,7 @@ from handlers.customer.shop import (
     back_to_categories_handler,
     back_to_products_handler,
 )
+from handlers.customer.cart import cart_command_handler
 from persistence.sqlite_persistence import SQLitePersistence
 
 
@@ -41,6 +42,7 @@ def main() -> None:
     application.add_handler(category_selection_handler)
     application.add_handler(product_selection_handler)
     application.add_handler(add_to_cart_handler)
+    application.add_handler(cart_command_handler)
     application.add_handler(close_shop_handler)
     application.add_handler(back_to_categories_handler)
     application.add_handler(back_to_products_handler)
