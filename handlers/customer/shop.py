@@ -216,11 +216,13 @@ async def handle_add_to_cart(
         await query.answer("Product no longer available.", show_alert=True)
         return
 
-    # Cart Logic (In Memory for now, moving to DB in Phase 3)
-    cart = context.user_data.setdefault("cart", {})
-    cart[product_id] = cart.get(product_id, 0) + 1
+    user_id = update.effective_user.id
+    new_quantity = await persistence.add_to_cart(user_id=user_id, product_id=product_id, quantity=1)
 
-    await query.answer(f"Added {product['name']} to cart! (Total: {cart[product_id]})")
+    if new_quantity:
+        await query.answer(f"{product['name']} added to cart! (Total: {new_quantity})")
+    else:
+        await query.answer("Error adding to cart. Please try again.", show_alert=True)
 
 
 async def handle_close_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

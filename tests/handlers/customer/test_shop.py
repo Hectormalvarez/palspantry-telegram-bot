@@ -244,7 +244,6 @@ async def test_handle_add_to_cart_new_item(
     # Arrange
     product_id = "prod_123"
     mock_update_callback_query.callback_query.data = f"add_to_cart_{product_id}"
-    mock_telegram_context.user_data = {}  # Start with an empty user_data
 
     # Mock the context.matches to simulate regex capture
     mock_match = mocker.MagicMock()
@@ -253,18 +252,17 @@ async def test_handle_add_to_cart_new_item(
 
     # Mock persistence to get the product name for the confirmation message
     mock_persistence_layer.get_product.return_value = {"name": "Croissant"}
+    mock_persistence_layer.add_to_cart.return_value = 1
 
     # Act
     await shop.handle_add_to_cart(mock_update_callback_query, mock_telegram_context)
 
     # Assert
-    # Check that the cart was created and the item was added
-    assert "cart" in mock_telegram_context.user_data
-    assert mock_telegram_context.user_data["cart"] == {product_id: 1}
+    mock_persistence_layer.add_to_cart.assert_called_once_with(user_id=98765, product_id=product_id, quantity=1)
     # Check that the user received a confirmation pop-up
     # Remove 'text=' keyword argument as the implementation uses positional args
     mock_update_callback_query.callback_query.answer.assert_called_once_with(
-        "Added Croissant to cart! (Total: 1)"
+        "Croissant added to cart! (Total: 1)"
     )
 
 
@@ -279,24 +277,22 @@ async def test_handle_add_to_cart_existing_item(
     # Arrange
     product_id = "prod_123"
     mock_update_callback_query.callback_query.data = f"add_to_cart_{product_id}"
-    # Start with the item already in the user's cart
-    mock_telegram_context.user_data = {"cart": {product_id: 2}}
 
     mock_match = mocker.MagicMock()
     mock_match.group.return_value = product_id
     mock_telegram_context.matches = [mock_match]
 
     mock_persistence_layer.get_product.return_value = {"name": "Croissant"}
+    mock_persistence_layer.add_to_cart.return_value = 2
 
     # Act
     await shop.handle_add_to_cart(mock_update_callback_query, mock_telegram_context)
 
     # Assert
-    # Check that the quantity was incremented
-    assert mock_telegram_context.user_data["cart"][product_id] == 3
+    mock_persistence_layer.add_to_cart.assert_called_once_with(user_id=98765, product_id=product_id, quantity=1)
     # Remove 'text=' keyword argument
     mock_update_callback_query.callback_query.answer.assert_called_once_with(
-        "Added Croissant to cart! (Total: 3)"
+        "Croissant added to cart! (Total: 2)"
     )
 
 

@@ -398,7 +398,7 @@ class SQLitePersistence(AbstractPantryPersistence):
 
     # --- Cart Management ---
 
-    async def add_to_cart(self, user_id: int, product_id: str, quantity: int) -> bool:
+    async def add_to_cart(self, user_id: int, product_id: str, quantity: int) -> Optional[int]:
         """
         Adds a product to the user's cart.
 
@@ -408,17 +408,35 @@ class SQLitePersistence(AbstractPantryPersistence):
             quantity (int): The quantity to add.
 
         Returns:
-            bool: True if the item was successfully added, False otherwise.
+            Optional[int]: The new quantity on success, or None on failure.
         """
-        return self._execute_write(
-            """
-            INSERT INTO cart_items (user_id, product_id, quantity)
-            VALUES (?, ?, ?)
-            ON CONFLICT (user_id, product_id) DO UPDATE SET
-                quantity = quantity + excluded.quantity
-            """,
-            (user_id, product_id, quantity),
-        )
+        conn = self._get_connection()
+        try:
+            with conn:  # Transaction start
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    INSERT INTO cart_items (user_id, product_id, quantity)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT (user_id, product_id) DO UPDATE SET
+                        quantity = quantity + excluded.quantity
+                    """,
+                    (user_id, product_id, quantity),
+                )
+                cursor.execute(
+                    "SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?",
+                    (user_id, product_id),
+                )
+                row = cursor.fetchone()
+                if row:
+                    return row["quantity"]
+                else:
+                    return None  # Should not happen
+        except sqlite3.Error as e:
+            logger.error(f"Error adding to cart: {e}")
+            return None
+        finally:
+            conn.close()
 
     async def get_cart_items(self, user_id: int) -> dict[str, int]:
         """

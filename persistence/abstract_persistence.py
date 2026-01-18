@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any  # For type hinting list[dict[str, Any]]
+from typing import Any, Optional  # For type hinting list[dict[str, Any]]
 
 
 class AbstractPantryPersistence(ABC):
@@ -155,7 +155,7 @@ class AbstractPantryPersistence(ABC):
 
     # --- Cart Management Methods ---
     @abstractmethod
-    async def add_to_cart(self, user_id: int, product_id: str, quantity: int) -> bool:
+    async def add_to_cart(self, user_id: int, product_id: str, quantity: int) -> Optional[int]:
         """
         Adds a product to the user's cart.
 
@@ -165,7 +165,7 @@ class AbstractPantryPersistence(ABC):
             quantity (int): The quantity to add.
 
         Returns:
-            bool: True if the item was successfully added, False otherwise.
+            Optional[int]: The new quantity on success, or None on failure.
         """
         pass
 

@@ -37,12 +37,12 @@ async def test_add_to_cart_and_retrieve(sqlite_persistence_layer):
     assert cart_items == {}
 
     # Add item to cart
-    success = await persistence.add_to_cart(user_id, product_id, 2)
-    assert success is True
+    result = await persistence.add_to_cart(user_id, product_id, 1)
+    assert result == 1
 
     # Retrieve cart items
     cart_items = await persistence.get_cart_items(user_id)
-    assert cart_items == {product_id: 2}
+    assert cart_items == {product_id: 1}
 
 
 @pytest.mark.asyncio
@@ -58,20 +58,20 @@ async def test_update_cart_quantity(sqlite_persistence_layer):
     user_id = 456
 
     # Add item to cart initially
-    success = await persistence.add_to_cart(user_id, product_id, 1)
-    assert success is True
+    result = await persistence.add_to_cart(user_id, product_id, 1)
+    assert result == 1
 
     # Check initial cart
     cart_items = await persistence.get_cart_items(user_id)
     assert cart_items == {product_id: 1}
 
     # Add the same item again (should increment quantity)
-    success = await persistence.add_to_cart(user_id, product_id, 3)
-    assert success is True
+    result = await persistence.add_to_cart(user_id, product_id, 1)
+    assert result == 2
 
     # Check updated cart
     cart_items = await persistence.get_cart_items(user_id)
-    assert cart_items == {product_id: 4}  # 1 + 3 = 4
+    assert cart_items == {product_id: 2}  # 1 + 1 = 2
 
 
 @pytest.mark.asyncio
@@ -90,10 +90,10 @@ async def test_clear_cart(sqlite_persistence_layer):
     user_id = 789
 
     # Add items to cart
-    success1 = await persistence.add_to_cart(user_id, product_id1, 2)
-    success2 = await persistence.add_to_cart(user_id, product_id2, 1)
-    assert success1 is True
-    assert success2 is True
+    result1 = await persistence.add_to_cart(user_id, product_id1, 2)
+    result2 = await persistence.add_to_cart(user_id, product_id2, 1)
+    assert result1 == 2
+    assert result2 == 1
 
     # Verify items are in cart
     cart_items = await persistence.get_cart_items(user_id)
