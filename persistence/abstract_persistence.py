@@ -195,11 +195,15 @@ class AbstractPantryPersistence(ABC):
         """
         pass
 
-    # --- Order Management Methods (We'll define these in detail later) ---
-    # @abstractmethod
-    # async def create_order(self, user_id: int, cart_items: list[dict], total_price: float) -> str | None:
-    #     pass
-    #
+    # --- Order Management Methods ---
+    @abstractmethod
+    async def create_order(self, user_id: int) -> Optional[str]:
+        """
+        Creates an order from the user's current cart. Returns the Order ID (UUID) if successful,
+        or None if the cart is empty or stock is insufficient.
+        """
+        pass
+
     # @abstractmethod
     # async def get_order(self, order_id: str) -> dict[str, Any] | None:
     #     pass

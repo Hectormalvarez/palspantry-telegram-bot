@@ -164,6 +164,23 @@ class SQLitePersistence(AbstractPantryPersistence):
                         PRIMARY KEY (user_id, product_id),
                         FOREIGN KEY (product_id) REFERENCES products(id)
                     );
+
+                    CREATE TABLE IF NOT EXISTS orders (
+                        id TEXT PRIMARY KEY,
+                        user_id INTEGER,
+                        total_amount REAL,
+                        status TEXT DEFAULT 'completed',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+
+                    CREATE TABLE IF NOT EXISTS order_items (
+                        order_id TEXT,
+                        product_id TEXT,
+                        quantity INTEGER,
+                        unit_price REAL,
+                        FOREIGN KEY(order_id) REFERENCES orders(id),
+                        FOREIGN KEY(product_id) REFERENCES products(id)
+                    );
                 """
                 )
         finally:
@@ -467,3 +484,64 @@ class SQLitePersistence(AbstractPantryPersistence):
         return self._execute_write(
             "DELETE FROM cart_items WHERE user_id = ?", (user_id,)
         )
+
+    # --- Order Management ---
+
+    async def create_order(self, user_id: int) -> Optional[str]:
+        """
+        Creates an order from the user's current cart.
+
+        Args:
+            user_id (int): The ID of the user.
+
+        Returns:
+            Optional[str]: The order ID if successful, None if cart is empty.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+
+            # Step A: Fetch Cart
+            cursor.execute(
+                """
+                SELECT ci.product_id, ci.quantity, p.price_cents / 100.0 AS price
+                FROM cart_items ci
+                JOIN products p ON ci.product_id = p.id
+                WHERE ci.user_id = ?
+                """,
+                (user_id,),
+            )
+            cart_rows = cursor.fetchall()
+
+            if not cart_rows:
+                return None
+
+            # Step B: Calculate Total
+            total_amount = sum(row["quantity"] * row["price"] for row in cart_rows)
+
+            # Step C: Create Order
+            order_id = str(uuid.uuid4())
+            cursor.execute(
+                """
+                INSERT INTO orders (id, user_id, total_amount, status)
+                VALUES (?, ?, ?, 'completed')
+                """,
+                (order_id, user_id, total_amount),
+            )
+
+            # Step D: Move Items
+            order_items_data = [
+                (order_id, row["product_id"], row["quantity"], row["price"])
+                for row in cart_rows
+            ]
+            cursor.executemany(
+                """
+                INSERT INTO order_items (order_id, product_id, quantity, unit_price)
+                VALUES (?, ?, ?, ?)
+                """,
+                order_items_data,
+            )
+
+            # Step E: Cleanup
+            cursor.execute("DELETE FROM cart_items WHERE user_id = ?", (user_id,))
+
+        return order_id
