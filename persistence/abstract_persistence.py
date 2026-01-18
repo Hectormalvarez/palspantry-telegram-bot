@@ -204,10 +204,19 @@ class AbstractPantryPersistence(ABC):
         """
         pass
 
-    # @abstractmethod
-    # async def get_order(self, order_id: str) -> dict[str, Any] | None:
-    #     pass
-    #
+    @abstractmethod
+    async def get_order(self, order_id: str) -> Optional[dict[str, Any]]:
+        """
+        Retrieves a specific order by its ID.
+
+        Args:
+            order_id (str): The ID of the order.
+
+        Returns:
+            Optional[dict[str, Any]]: The order data, or None if not found.
+        """
+        pass
+
     # @abstractmethod
     # async def update_order_status(self, order_id: str, new_status: str) -> bool:
     #     pass

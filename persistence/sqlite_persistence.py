@@ -545,3 +545,42 @@ class SQLitePersistence(AbstractPantryPersistence):
             cursor.execute("DELETE FROM cart_items WHERE user_id = ?", (user_id,))
 
         return order_id
+
+    async def get_order(self, order_id: str) -> Optional[dict[str, Any]]:
+        """
+        Retrieves a specific order by its ID.
+
+        Args:
+            order_id (str): The ID of the order.
+
+        Returns:
+            Optional[dict[str, Any]]: The order data, or None if not found.
+        """
+        # Get order header
+        order_row = self._execute_read_one(
+            "SELECT id, total_amount FROM orders WHERE id = ?", (order_id,)
+        )
+        if not order_row:
+            return None
+
+        # Get order items with product names
+        items_rows = self._execute_read_all(
+            """
+            SELECT oi.quantity, p.name
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+            """,
+            (order_id,)
+        )
+
+        # Format items
+        items = [
+            {"name": row["name"], "quantity": row["quantity"]}
+            for row in items_rows
+        ]
+
+        return {
+            "total_amount": order_row["total_amount"],
+            "items": items
+        }
