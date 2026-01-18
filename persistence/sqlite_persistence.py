@@ -156,6 +156,14 @@ class SQLitePersistence(AbstractPantryPersistence):
                         image_file_id TEXT,
                         is_active INTEGER DEFAULT 1
                     );
+
+                    CREATE TABLE IF NOT EXISTS cart_items (
+                        user_id INTEGER,
+                        product_id TEXT,
+                        quantity INTEGER,
+                        PRIMARY KEY (user_id, product_id),
+                        FOREIGN KEY (product_id) REFERENCES products(id)
+                    );
                 """
                 )
         finally:
@@ -387,3 +395,57 @@ class SQLitePersistence(AbstractPantryPersistence):
             return None
         finally:
             conn.close()
+
+    # --- Cart Management ---
+
+    async def add_to_cart(self, user_id: int, product_id: str, quantity: int) -> bool:
+        """
+        Adds a product to the user's cart.
+
+        Args:
+            user_id (int): The ID of the user.
+            product_id (str): The ID of the product to add.
+            quantity (int): The quantity to add.
+
+        Returns:
+            bool: True if the item was successfully added, False otherwise.
+        """
+        return self._execute_write(
+            """
+            INSERT INTO cart_items (user_id, product_id, quantity)
+            VALUES (?, ?, ?)
+            ON CONFLICT (user_id, product_id) DO UPDATE SET
+                quantity = quantity + excluded.quantity
+            """,
+            (user_id, product_id, quantity),
+        )
+
+    async def get_cart_items(self, user_id: int) -> dict[str, int]:
+        """
+        Retrieves the items in the user's cart.
+
+        Args:
+            user_id (int): The ID of the user.
+
+        Returns:
+            dict[str, int]: A dictionary mapping product IDs to quantities.
+        """
+        rows = self._execute_read_all(
+            "SELECT product_id, quantity FROM cart_items WHERE user_id = ?",
+            (user_id,),
+        )
+        return {row["product_id"]: row["quantity"] for row in rows}
+
+    async def clear_cart(self, user_id: int) -> bool:
+        """
+        Clears all items from the user's cart.
+
+        Args:
+            user_id (int): The ID of the user.
+
+        Returns:
+            bool: True if the cart was successfully cleared, False otherwise.
+        """
+        return self._execute_write(
+            "DELETE FROM cart_items WHERE user_id = ?", (user_id,)
+        )

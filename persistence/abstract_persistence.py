@@ -153,6 +153,48 @@ class AbstractPantryPersistence(ABC):
         """
         pass
 
+    # --- Cart Management Methods ---
+    @abstractmethod
+    async def add_to_cart(self, user_id: int, product_id: str, quantity: int) -> bool:
+        """
+        Adds a product to the user's cart.
+
+        Args:
+            user_id (int): The ID of the user.
+            product_id (str): The ID of the product to add.
+            quantity (int): The quantity to add.
+
+        Returns:
+            bool: True if the item was successfully added, False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    async def get_cart_items(self, user_id: int) -> dict[str, int]:
+        """
+        Retrieves the items in the user's cart.
+
+        Args:
+            user_id (int): The ID of the user.
+
+        Returns:
+            dict[str, int]: A dictionary mapping product IDs to quantities.
+        """
+        pass
+
+    @abstractmethod
+    async def clear_cart(self, user_id: int) -> bool:
+        """
+        Clears all items from the user's cart.
+
+        Args:
+            user_id (int): The ID of the user.
+
+        Returns:
+            bool: True if the cart was successfully cleared, False otherwise.
+        """
+        pass
+
     # --- Order Management Methods (We'll define these in detail later) ---
     # @abstractmethod
     # async def create_order(self, user_id: int, cart_items: list[dict], total_price: float) -> str | None:
