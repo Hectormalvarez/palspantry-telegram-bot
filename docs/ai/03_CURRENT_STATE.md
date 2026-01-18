@@ -9,11 +9,12 @@
    * Wired End-to-End Cart-to-Order flow.
    * Fully implemented SQLite Persistence.
    * Completed End-to-End Order Transaction Loop.
+   * Implemented /start handler with 'Shop Now' CTA.
+   * Implemented Catch-all handler for unknown inputs.
 * **Current Task:** MVP Polish & User Experience Improvements
 * **Context:** We will create the order tables and the create_order method to handle transactions from cart to order.
 
 ## 2. Immediate Next Steps
-* Implement /start and Catch-all handlers.
 * Improve Checkout Receipt (Show summary, not just ID).
-* Implement Owner Notification for new orders.
+* Enrich Owner Notification (Include item details).
 * Reduce chat clutter in Admin "Add Product" flow.
