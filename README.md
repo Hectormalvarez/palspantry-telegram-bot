@@ -89,7 +89,8 @@ The initial MVP focuses on core product management for the shop owner and a brow
 * **Logging:** Standard Python `logging` module, configured in `config.py`.
 * **Persistence Abstraction Layer (PAL):**
     * `persistence/abstract_persistence.py`: Defines the interface for data operations.
-    * `persistence/in_memory_persistence.py`: Current implementation. Stores bot owner and product data in memory. **Data resets on bot restart.**
+    * `persistence/in_memory_persistence.py`: Deprecated implementation (replaced by SQLite).
+    * `persistence/sqlite_persistence.py`: Current active implementation using SQLite for persistent data storage.
 * **Testing:**
     * `pytest` framework.
     * `pytest-asyncio` for async tests.
@@ -115,6 +116,8 @@ This project is being developed iteratively.
 
 2.  **Milestone 2: Core Product & Shop Features (✅ COMPLETE)**
     * The `/addproduct` feature has been successfully modularized.
+
+4.  **Milestone 4: The Transaction Loop (✅ COMPLETE)**
 
 
 ## Project Structure

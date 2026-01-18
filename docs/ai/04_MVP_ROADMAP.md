@@ -18,7 +18,7 @@ This roadmap defines the critical path to a functional "Minimum Viable Product."
 * [x] Database: Create `orders` and `order_items` tables
 * [x] Persistence: Implement `create_order` (Atomic Transaction)
 * [x] UI: Wire 'Checkout' button to `create_order`
-* [ ] **Customer UX:**
+* [x] **Customer UX:**
     * Send "Order Receipt" message to customer.
     * Clear the user's cart after successful order.
 
