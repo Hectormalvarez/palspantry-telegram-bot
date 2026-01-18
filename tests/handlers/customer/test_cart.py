@@ -133,3 +133,6 @@ async def test_handle_checkout_success(
     )
     notification_text = mock_telegram_context.bot.send_message.call_args.kwargs["text"]
     assert "New Order Received" in notification_text
+    assert "Burger" in notification_text
+    assert "Fries" in notification_text
+    assert "x 1" in notification_text
