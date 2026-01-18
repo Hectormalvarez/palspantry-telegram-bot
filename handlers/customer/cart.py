@@ -65,6 +65,20 @@ async def handle_clear_cart(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await query.edit_message_text(text="Cart cleared.")
 
 
+async def handle_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handles the checkout process."""
+    query = update.callback_query
+    user_id = update.effective_user.id
+    persistence: AbstractPantryPersistence = context.bot_data["persistence"]
+
+    order_id = await persistence.create_order(user_id=user_id)
+    if order_id is not None:
+        await query.edit_message_text(text=f"Order placed! Order ID: {order_id}")
+    else:
+        await query.answer(text="Cannot place order. Is your cart empty?", show_alert=True)
+
+
 # Handler registration
 cart_command_handler = CommandHandler("cart", handle_cart_command)
 clear_cart_handler = CallbackQueryHandler(handle_clear_cart, pattern="^clear_cart$")
+checkout_handler = CallbackQueryHandler(handle_checkout, pattern="^cart_checkout$")

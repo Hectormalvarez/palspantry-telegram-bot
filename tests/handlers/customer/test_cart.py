@@ -94,3 +94,25 @@ async def test_handle_clear_cart_callback(
         text="Cart cleared."
     )
     mock_update_callback_query.callback_query.answer.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_handle_checkout_success(
+    mocker,
+    mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
+    """Test handle_checkout success."""
+    # Arrange
+    mock_update_callback_query.callback_query.data = "cart_checkout"
+    mock_persistence_layer.create_order.return_value = "order-123-uuid"
+
+    # Act
+    await cart.handle_checkout(mock_update_callback_query, mock_telegram_context)
+
+    # Assert
+    mock_persistence_layer.create_order.assert_called_once_with(user_id=98765)
+    mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
+        text="Order placed! Order ID: order-123-uuid"
+    )
