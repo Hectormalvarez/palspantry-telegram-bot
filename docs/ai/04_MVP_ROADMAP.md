@@ -6,18 +6,16 @@ This roadmap defines the critical path to a functional "Minimum Viable Product."
 
 ---
 
-## Phase 2: The Foundation (Current)
+## Phase 2: The Foundation
 **Focus:** Reliability & Data Integrity.
-* [ ] **Test SQLite Persistence:** Verify schema creation, data types, and constraints.
-* [ ] **Migrate Bot:** Switch `bot_main.py` to use `SQLitePersistence` exclusively.
-* [ ] **Image Persistence:** Ensure file_ids for product images are stored/retrieved correctly.
-* [ ] **Cleanup:** Remove `InMemoryPersistence` to prevent technical debt.
+* [x] **Test SQLite Persistence:** Verify schema creation, data types, and constraints.
+* [x] **Migrate Bot:** Switch `bot_main.py` to use `SQLitePersistence` exclusively.
+* [x] **Image Persistence:** Ensure file_ids for product images are stored/retrieved correctly.
+* [x] **Cleanup:** Remove `InMemoryPersistence` to prevent technical debt.
 
-## Phase 3: The Transaction Loop
+## Phase 3: The Transaction Loop (Current)
 **Focus:** Enabling the Customer to buy.
-* [ ] **Database Schema Upgrade:**
-    * Create `orders` table (UUID, user_id, status, timestamp).
-    * Create `order_items` table (Snapshots of product name/price at time of purchase).
+* [ ] **Database Schema Upgrade: Create `cart_items` table**
 * [ ] **Checkout Logic:**
     * Implement "Place Order" button handler.
     * Validation: Check stock levels one last time before committing.

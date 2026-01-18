@@ -14,7 +14,7 @@ PalsPantry is a Python-based Telegram bot designed to be a lightweight e-commerc
 
 ## 3. Current Implementation Status
 * **Architecture:** Modular handler structure, Abstract Persistence Layer.
-* **Persistence:** Currently migrating from In-Memory (volatile) to SQLite.
+* **Persistence:** **SQLite (Fully Implemented)**.
 * **Missing Features:**
     * Product Images (Code exists but is skipped in handlers).
     * Checkout Logic (Cart exists, but "Place Order" does nothing).
