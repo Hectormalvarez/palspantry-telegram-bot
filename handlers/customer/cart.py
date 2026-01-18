@@ -97,10 +97,15 @@ async def handle_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # Notify owner
     owner_id = await persistence.get_bot_owner()
     if owner_id:
+        item_lines = ["Items:"]
+        for item in items:
+            item_lines.append(f"- {item['name']} x {item['quantity']}")
+        items_summary = "\n".join(item_lines)
         notification = (
             "🔔 New Order Received!\n"
             f"Customer: {user_id}\n"
             f"Order ID: {order_id}\n"
+            f"{items_summary}\n"
             f"Total: ${total:.2f}"
         )
         await context.bot.send_message(chat_id=owner_id, text=notification)
