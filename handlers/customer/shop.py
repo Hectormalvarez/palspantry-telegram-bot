@@ -269,3 +269,4 @@ back_to_categories_handler = CallbackQueryHandler(
 back_to_products_handler = CallbackQueryHandler(
     handle_category_selection, pattern="^navigate_to_products_(.+)"
 )
+shop_home_callback_handler = CallbackQueryHandler(shop_start, pattern="^shop_start$")
