@@ -1,7 +1,7 @@
 import logging
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CommandHandler, ContextTypes
+from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
 
 from persistence.abstract_persistence import AbstractPantryPersistence
 
@@ -45,7 +45,7 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     keyboard = [
         [
             InlineKeyboardButton("Checkout", callback_data="cart_checkout"),
-            InlineKeyboardButton("Clear Cart", callback_data="cart_clear"),
+            InlineKeyboardButton("Clear Cart", callback_data="clear_cart"),
             InlineKeyboardButton("Continue Shopping", callback_data="cart_continue_shopping"),
         ]
     ]
@@ -53,5 +53,18 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_text(text=text, reply_markup=reply_markup)
 
 
+async def handle_clear_cart(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handles clearing the user's cart."""
+    query = update.callback_query
+    await query.answer()
+
+    user_id = update.effective_user.id
+    persistence: AbstractPantryPersistence = context.bot_data["persistence"]
+    await persistence.clear_cart(user_id=user_id)
+
+    await query.edit_message_text(text="Cart cleared.")
+
+
 # Handler registration
 cart_command_handler = CommandHandler("cart", handle_cart_command)
+clear_cart_handler = CallbackQueryHandler(handle_clear_cart, pattern="^clear_cart$")

@@ -67,3 +67,26 @@ async def test_handle_cart_command_with_items(
     assert "Checkout" in button_texts
     assert "Clear Cart" in button_texts
     assert "Continue Shopping" in button_texts
+
+
+@pytest.mark.asyncio
+async def test_handle_clear_cart_callback(
+    mocker,
+    mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
+    """Test handle_clear_cart callback query."""
+    # Arrange
+    mock_update_callback_query.callback_query.data = "clear_cart"
+    mock_persistence_layer.clear_cart.return_value = True
+
+    # Act
+    await cart.handle_clear_cart(mock_update_callback_query, mock_telegram_context)
+
+    # Assert
+    mock_persistence_layer.clear_cart.assert_called_once_with(user_id=98765)
+    mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
+        text="Cart cleared."
+    )
+    mock_update_callback_query.callback_query.answer.assert_called_once()
