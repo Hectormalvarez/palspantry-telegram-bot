@@ -60,6 +60,7 @@ def mock_telegram_context(
     """
     context = mocker.AsyncMock(spec=ContextTypes.DEFAULT_TYPE)
     context.bot_data = {"persistence": mock_persistence_layer}
+    context.bot = mocker.AsyncMock()
     return context
 
 

@@ -566,7 +566,7 @@ class SQLitePersistence(AbstractPantryPersistence):
         # Get order items with product names
         items_rows = self._execute_read_all(
             """
-            SELECT oi.quantity, p.name
+            SELECT oi.quantity AS quantity, oi.unit_price AS unit_price, p.name AS name
             FROM order_items oi
             JOIN products p ON oi.product_id = p.id
             WHERE oi.order_id = ?
@@ -576,7 +576,7 @@ class SQLitePersistence(AbstractPantryPersistence):
 
         # Format items
         items = [
-            {"name": row["name"], "quantity": row["quantity"]}
+            {"name": row["name"], "quantity": row["quantity"], "unit_price": row["unit_price"]}
             for row in items_rows
         ]
 

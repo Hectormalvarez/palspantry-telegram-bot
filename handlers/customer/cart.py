@@ -1,6 +1,7 @@
 import logging
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
 
 from persistence.abstract_persistence import AbstractPantryPersistence
@@ -72,10 +73,37 @@ async def handle_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     persistence: AbstractPantryPersistence = context.bot_data["persistence"]
 
     order_id = await persistence.create_order(user_id=user_id)
-    if order_id is not None:
-        await query.edit_message_text(text=f"Order placed! Order ID: {order_id}")
-    else:
+    if order_id is None:
         await query.answer(text="Cannot place order. Is your cart empty?", show_alert=True)
+        return
+
+    order = await persistence.get_order(order_id=order_id)
+    items = order["items"]
+    total = order["total_amount"]
+
+    # Format receipt
+    receipt_lines = ["✅ Order Placed Successfully!"]
+    for item in items:
+        name = item["name"]
+        qty = item["quantity"]
+        price = item["unit_price"]
+        receipt_lines.append(f"- {name} x {qty} @ ${price:.2f}")
+    receipt_lines.append(f"<b>Total: ${total:.2f}</b>")
+    receipt_lines.append("Thank you!")
+    receipt = "\n".join(receipt_lines)
+
+    await query.edit_message_text(text=receipt, parse_mode=ParseMode.HTML)
+
+    # Notify owner
+    owner_id = await persistence.get_bot_owner()
+    if owner_id:
+        notification = (
+            "🔔 New Order Received!\n"
+            f"Customer: {user_id}\n"
+            f"Order ID: {order_id}\n"
+            f"Total: ${total:.2f}"
+        )
+        await context.bot.send_message(chat_id=owner_id, text=notification)
 
 
 # Handler registration
