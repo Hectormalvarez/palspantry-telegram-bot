@@ -1,12 +1,17 @@
 ======== FILE: docs/ai/03_CURRENT_STATE.md ========
 ## 1. Active Milestone
-**Milestone 3: Persistent Shopping Cart**
-* **Goal:** Persist user cart state in SQLite so it survives bot restarts.
-* **Status:** In Progress
-* **Current Task:** Schema Update & Persistence Logic
-* **Context:** We have a working `cart.py` handler logic (from a previous branch) but it uses ephemeral memory. We need to back it with a `cart_items` table.
+**Milestone 4: The Transaction Loop**
+* **Goal:** Implement the order creation process, converting cart items into orders.
+* **Status:** In Progress - MVP Refinement
+* **Recent Achievements:**
+   * Implemented Atomic Order Creation (Database Transaction).
+   * Implemented Checkout Handler.
+   * Wired End-to-End Cart-to-Order flow.
+* **Current Task:** MVP Polish & User Experience Improvements
+* **Context:** We will create the order tables and the create_order method to handle transactions from cart to order.
 
 ## 2. Immediate Next Steps
-1. Update `sqlite_persistence.py` to create the `cart_items` table.
-2. Implement `add_to_cart`, `get_cart`, `remove_from_cart`, and `clear_cart` in `sqlite_persistence.py`.
-3. Create integration tests for Cart persistence.
+* Implement /start and Catch-all handlers.
+* Improve Checkout Receipt (Show summary, not just ID).
+* Implement Owner Notification for new orders.
+* Reduce chat clutter in Admin "Add Product" flow.

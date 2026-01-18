@@ -13,16 +13,20 @@ This roadmap defines the critical path to a functional "Minimum Viable Product."
 * [x] **Image Persistence:** Ensure file_ids for product images are stored/retrieved correctly.
 * [x] **Cleanup:** Remove `InMemoryPersistence` to prevent technical debt.
 
-## Phase 3: The Transaction Loop (Current)
+## Milestone 4: The Transaction Loop
 **Focus:** Enabling the Customer to buy.
-* [ ] **Database Schema Upgrade: Create `cart_items` table**
-* [ ] **Checkout Logic:**
-    * Implement "Place Order" button handler.
-    * Validation: Check stock levels one last time before committing.
-    * Atomic Transaction: Deduct stock + Create Order record.
+* [x] Database: Create `orders` and `order_items` tables
+* [x] Persistence: Implement `create_order` (Atomic Transaction)
+* [x] UI: Wire 'Checkout' button to `create_order`
 * [ ] **Customer UX:**
     * Send "Order Receipt" message to customer.
     * Clear the user's cart after successful order.
+
+## Milestone 4.5: MVP Polish
+* [ ] User Guidance (/start and Help handlers).
+* [ ] Enhanced Order Receipts (User summary).
+* [ ] Admin Notifications (Notify owner on purchase).
+* [ ] UI/UX Cleanup (Delete intermediate admin messages).
 
 ## Phase 4: The Owner Dashboard
 **Focus:** Enabling the Owner to fulfill.
