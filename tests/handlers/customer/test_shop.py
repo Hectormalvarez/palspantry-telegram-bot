@@ -1,11 +1,12 @@
 import pytest
 from unittest.mock import ANY
 
-from telegram import Update, User, InlineKeyboardMarkup
+from telegram import Update, User, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 from handlers.customer import shop
+from handlers.general.start import get_home_menu
 from persistence.abstract_persistence import AbstractPantryPersistence
 
 
@@ -304,23 +305,25 @@ async def test_handle_close_shop(
     mocker,
     mock_update_callback_query: Update,
     mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
 ):
-    """Test that the 'close_shop' callback ends the interaction"""
+    """Test that the 'close_shop' callback navigates back to the Home Dashboard"""
     # Arrange
     query = mock_update_callback_query.callback_query
     query.data = "close_shop"
-    mock_telegram_context.job_queue = mocker.Mock()
+    mock_update_callback_query.effective_user.first_name = "TestUser"
+    mock_telegram_context.bot_data["persistence"] = mock_persistence_layer
+    mock_keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Mock", callback_data="mock")]])
+    mock_get_home_menu = mocker.patch("handlers.customer.shop.get_home_menu")
+    mock_get_home_menu.return_value = ("Mock Dashboard", mock_keyboard)
 
     # Act
     await shop.handle_close_shop(mock_update_callback_query, mock_telegram_context)
 
     # Assert
     query.answer.assert_called_once()
-    query.edit_message_text.assert_called_once_with(
-        "Shop closed. See you soon!",
-        reply_markup=None,  # Asserts the keyboard is removed
-    )
-    assert mock_telegram_context.job_queue.run_once.call_count >= 1
+    mock_get_home_menu.assert_called_once_with(mock_persistence_layer, 98765, "TestUser")
+    query.edit_message_text.assert_called_once_with(text="Mock Dashboard", reply_markup=mock_keyboard)
 
 
 @pytest.mark.asyncio
