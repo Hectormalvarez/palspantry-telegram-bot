@@ -233,14 +233,23 @@ async def handle_close_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     query = update.callback_query
     await query.answer()
 
+    chat_id = update.effective_chat.id
+    message_id_to_delete = None
+
     # Check if we are closing a photo message
     if query.message.photo:
         await query.message.delete()
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id, text="Shop closed. See you soon!"
+        sent_msg = await context.bot.send_message(
+            chat_id=chat_id, text="Shop closed. See you soon!"
         )
+        message_id_to_delete = sent_msg.message_id
     else:
         await query.edit_message_text("Shop closed. See you soon!", reply_markup=None)
+        message_id_to_delete = query.message.message_id
+
+    # Schedule deletion for 5 seconds later
+    if message_id_to_delete:
+        schedule_deletion(context, chat_id, message_id_to_delete, delay=5.0)
 
 
 async def handle_back_to_categories(

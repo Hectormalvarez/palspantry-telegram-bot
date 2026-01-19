@@ -42,6 +42,7 @@ This roadmap defines the critical path to a functional "Minimum Viable Product."
 
 ## Post-MVP (Out of Scope for v1.0)
 * "Refactor: Centralized Message/String Management to decouple text from logic."
+* "UX Refactor: Redesign 'Shop Closed' interaction (Move away from ephemeral status messages)."
 * Real-time Payment Processing (Stripe/Telegram Payments).
 * Customer Order History/Profiles.
 * Web Dashboard.

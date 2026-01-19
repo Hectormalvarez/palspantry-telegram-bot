@@ -301,15 +301,18 @@ async def test_handle_add_to_cart_existing_item(
 
 @pytest.mark.asyncio
 async def test_handle_close_shop(
+    mocker,
     mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
 ):
     """Test that the 'close_shop' callback ends the interaction"""
     # Arrange
     query = mock_update_callback_query.callback_query
     query.data = "close_shop"
+    mock_telegram_context.job_queue = mocker.Mock()
 
     # Act
-    await shop.handle_close_shop(mock_update_callback_query, None)
+    await shop.handle_close_shop(mock_update_callback_query, mock_telegram_context)
 
     # Assert
     query.answer.assert_called_once()
@@ -317,6 +320,7 @@ async def test_handle_close_shop(
         "Shop closed. See you soon!",
         reply_markup=None,  # Asserts the keyboard is removed
     )
+    assert mock_telegram_context.job_queue.run_once.call_count >= 1
 
 
 @pytest.mark.asyncio
@@ -408,24 +412,3 @@ async def test_handle_back_to_products(
     assert isinstance(sent_markup, InlineKeyboardMarkup)
     assert len(sent_markup.inline_keyboard) == 2  # 1 product, 1 nav row
     assert sent_markup.inline_keyboard[0][0].text == "Croissant ($2.50)"
-
-
-@pytest.mark.asyncio
-async def test_handle_close_shop(
-    mock_update_callback_query: Update,
-    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
-):
-    """Test that the close_shop callback deletes the message."""
-    # Arrange
-    query = mock_update_callback_query.callback_query
-    query.data = "close_shop"
-
-    # Act
-    await shop.handle_close_shop(mock_update_callback_query, mock_telegram_context)
-
-    # Assert
-    query.answer.assert_called_once()
-    query.edit_message_text.assert_called_once_with(
-        "Shop closed. See you soon!",
-        reply_markup=None,  # Explicitly check that the keyboard is removed
-    )
