@@ -28,12 +28,14 @@ async def test_add_product_start_as_owner(
     """Test /addproduct start when user is the owner."""
     test_owner_id = 12345
     mock_update_message.effective_user = mocker.MagicMock(spec=User, id=test_owner_id)
+    mock_update_message.message.message_id = 111
 
     # Configure persistence mock for owner check
     mock_persistence_layer.get_bot_owner.return_value = test_owner_id
 
     # Ensure user_data is initially empty or does not contain 'new_product'
     mock_telegram_context.user_data = {}
+    mock_telegram_context.job_queue = mocker.Mock()
 
     next_state = await add_product.add_product_start(
         mock_update_message, mock_telegram_context
@@ -45,6 +47,7 @@ async def test_add_product_start_as_owner(
     )
     assert "new_product" in mock_telegram_context.user_data
     assert mock_telegram_context.user_data["new_product"] == {}
+    assert mock_telegram_context.job_queue.run_once.call_count >= 1
 
 
 @pytest.mark.asyncio
@@ -358,10 +361,12 @@ async def test_received_product_quantity_invalid_inputs(
 # --- Tests for cancel_add_product ---
 @pytest.mark.asyncio
 async def test_cancel_add_product_with_data(
+    mocker,
     mock_update_message: Update, mock_telegram_context: ContextTypes.DEFAULT_TYPE
 ):
     """Test cancelling the conversation when some data exists."""
     mock_telegram_context.user_data = {"new_product": {"name": "Test"}}
+    mock_telegram_context.job_queue = mocker.Mock()
     # Ensure callback_query is None so it doesn't try to await answer()
     mock_update_message.callback_query = None
 
@@ -377,6 +382,7 @@ async def test_cancel_add_product_with_data(
     assert args[0] == "Product addition cancelled."
     assert isinstance(kwargs.get("reply_markup"), ReplyKeyboardRemove)
     assert "new_product" not in mock_telegram_context.user_data
+    assert mock_telegram_context.job_queue.run_once.call_count >= 1
 
 
 @pytest.mark.asyncio
@@ -437,3 +443,40 @@ async def test_received_product_category_invalid_empty_text_input(
         "Category cannot be empty. Please enter a category, or /cancel."
     )
     assert "category" not in mock_telegram_context.user_data.get("new_product", {})
+
+
+# --- Tests for handle_product_save_confirmed ---
+@pytest.mark.asyncio
+async def test_handle_product_save_confirmed(
+    mocker,
+    mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
+    """Test handling product save confirmation."""
+    mock_telegram_context.job_queue = mocker.Mock()
+    product_data = {
+        "name": "Test Product",
+        "description": "Test Description",
+        "price": 10.99,
+        "quantity": 5,
+        "category": "Test Category",
+        "image_file_id": "test_file_id",
+    }
+    mock_telegram_context.user_data = {"new_product": product_data}
+    mock_persistence_layer.add_product.return_value = 1  # Simulate successful save
+
+    next_state = await add_product.handle_product_save_confirmed(
+        mock_update_callback_query, mock_telegram_context
+    )
+
+    assert next_state == ConversationHandler.END
+    mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
+        "✅ Product 'Test Product' added!"
+    )
+    mock_persistence_layer.add_product.assert_called_once_with(product_data)
+    assert "new_product" not in mock_telegram_context.user_data
+    assert mock_telegram_context.job_queue.run_once.call_count >= 1
+
+
+# --- Tests for cancel_add_product ---

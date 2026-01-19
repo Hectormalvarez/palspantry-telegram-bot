@@ -26,6 +26,16 @@ def schedule_deletion(context: ContextTypes.DEFAULT_TYPE, chat_id: int, message_
         context.job_queue.run_once(_delete_msg_job, delay, data=(chat_id, message_id))
 
 
+async def _delete_user_message(update: Update):
+    """Deletes the user's message that triggered the update, if it exists."""
+    if update.message:
+        try:
+            await update.message.delete()
+        except Exception as e:
+            # User might have deleted it already or bot lacks permissions
+            logging.getLogger(__name__).debug(f"Failed to delete user message: {e}")
+
+
 # --- Helper for Owner-Only Commands ---
 async def owner_only_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE

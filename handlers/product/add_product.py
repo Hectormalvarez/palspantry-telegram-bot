@@ -19,7 +19,7 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 from persistence.abstract_persistence import AbstractPantryPersistence
-from handlers.utils import owner_only_command, schedule_deletion
+from handlers.utils import owner_only_command, schedule_deletion, _delete_user_message
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,9 @@ async def add_product_start(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return ConversationHandler.END
 
     context.user_data["new_product"] = {}
+
+    if update.message:
+        schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
 
     # FIX: Use effective_message to prevent NoneType errors on edge cases
     sent_message = await update.effective_message.reply_text(
@@ -273,8 +276,10 @@ async def handle_product_save_confirmed(
 
     if product_id:
         await query.edit_message_text(f"✅ Product '{product_data['name']}' added!")
+        schedule_deletion(context, update.effective_chat.id, query.message.message_id, delay=5.0)
     else:
         await query.edit_message_text("❌ Database error. Could not save.")
+        schedule_deletion(context, update.effective_chat.id, query.message.message_id, delay=5.0)
 
     context.user_data.pop("new_product", None)
     return ConversationHandler.END
@@ -288,14 +293,18 @@ async def cancel_add_product(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if update.callback_query:
         await update.callback_query.answer()
         await update.callback_query.edit_message_text("Product addition cancelled.")
+        schedule_deletion(context, update.effective_chat.id, update.callback_query.message.message_id, delay=5.0)
     # Check if this came from a text command (/cancel)
     elif update.message:
-        await update.message.reply_text(
+        await _delete_user_message(update)
+        sent = await update.message.reply_text(
             "Product addition cancelled.", reply_markup=ReplyKeyboardRemove()
         )
+        schedule_deletion(context, update.effective_chat.id, sent.message_id, delay=5.0)
     # Fallback for any other update type
     elif update.effective_message:
         await update.effective_message.reply_text("Product addition cancelled.")
+        schedule_deletion(context, update.effective_chat.id, update.effective_message.message_id, delay=5.0)
 
     return ConversationHandler.END
 
