@@ -5,6 +5,7 @@ from telegram.ext import CommandHandler, ContextTypes, CallbackQueryHandler
 from telegram.constants import ParseMode
 
 from persistence.abstract_persistence import AbstractPantryPersistence
+from handlers.utils import schedule_deletion
 
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,9 @@ async def shop_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
             return
 
     await _send_category_menu(update, context, send_new=not is_callback)
+
+    if update.message:
+        schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
 
 
 async def _send_category_menu(

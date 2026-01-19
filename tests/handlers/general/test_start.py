@@ -17,6 +17,7 @@ async def test_start_command(
     """Test /start command handler."""
     # Arrange
     mock_update_message.effective_user.first_name = "Alice"
+    mock_telegram_context.job_queue = mocker.Mock()
 
     # Act
     await start_command(mock_update_message, mock_telegram_context)
@@ -42,3 +43,5 @@ async def test_start_command(
         if shop_button_found:
             break
     assert shop_button_found, "Shop Now button with callback_data 'shop_start' not found"
+
+    assert mock_telegram_context.job_queue.run_once.call_count >= 1

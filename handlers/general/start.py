@@ -3,6 +3,8 @@ import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
+from handlers.utils import schedule_deletion
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,3 +19,6 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     text = f"Welcome, {first_name}! \n\nI am the PalsPantry Bot. I can help you browse our inventory and place orders."
 
     await update.message.reply_text(text, reply_markup=reply_markup)
+
+    if update.message:
+        schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)

@@ -23,6 +23,7 @@ async def test_shop_start_with_categories(
     mock_categories = ["Bakery", "Drinks"]
     mock_telegram_context.bot.send_message = mocker.AsyncMock()
     mock_persistence_layer.get_all_categories.return_value = mock_categories
+    mock_telegram_context.job_queue = mocker.Mock()
 
     # Act
     await shop.shop_start(mock_update_message, mock_telegram_context)
@@ -43,6 +44,8 @@ async def test_shop_start_with_categories(
     assert len(close_row) == 1
     assert close_row[0].text == "❌ Close"
     assert close_row[0].callback_data == "close_shop"
+
+    assert mock_telegram_context.job_queue.run_once.call_count >= 1
 
 
 @pytest.mark.asyncio
