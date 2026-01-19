@@ -13,11 +13,13 @@ async def test_start_command(
     mocker,
     mock_update_message: Update,
     mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer,
 ):
     """Test /start command handler."""
     # Arrange
     mock_update_message.effective_user.first_name = "Alice"
     mock_telegram_context.job_queue = mocker.Mock()
+    mock_persistence_layer.get_cart_items.return_value = {}
 
     # Act
     await start_command(mock_update_message, mock_telegram_context)
