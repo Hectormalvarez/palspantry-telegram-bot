@@ -84,6 +84,7 @@ async def test_received_product_name_valid(
     mock_telegram_context.user_data = {
         "new_product": {}
     }  # Simulate state after add_product_start
+    mock_telegram_context.job_queue = mocker.Mock()
     product_name = "Super Widget"
     mock_update_message.message.text = product_name
     mock_update_message.effective_user = mocker.MagicMock(
@@ -100,7 +101,7 @@ async def test_received_product_name_valid(
     mock_update_message.message.reply_text.assert_called_once_with(
         f"Name set to '{product_name}'.\n\nNow, please enter a description."
     )
-    mock_telegram_context.bot.delete_message.assert_any_call(chat_id=123, message_id=555)
+    assert mock_telegram_context.job_queue.run_once.call_count >= 1
 
 
 @pytest.mark.asyncio

@@ -19,7 +19,7 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 from persistence.abstract_persistence import AbstractPantryPersistence
-from handlers.utils import owner_only_command
+from handlers.utils import owner_only_command, schedule_deletion
 
 logger = logging.getLogger(__name__)
 
@@ -31,27 +31,6 @@ PRODUCT_QUANTITY = 3
 PRODUCT_CATEGORY = 4
 PRODUCT_IMAGE = 5
 PRODUCT_CONFIRMATION = 6
-
-
-async def _cleanup_previous_message(context: ContextTypes.DEFAULT_TYPE, chat_id: int):
-    """Deletes the previous bot message if it exists."""
-    last_msg_id = context.user_data.get("last_bot_msg_id")
-    if last_msg_id:
-        try:
-            await context.bot.delete_message(chat_id=chat_id, message_id=last_msg_id)
-        except Exception as e:
-            logger.warning(f"Failed to delete message {last_msg_id}: {e}")
-
-
-async def _delete_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Deletes the user's triggering message."""
-    try:
-        if update.message:
-            await context.bot.delete_message(
-                chat_id=update.effective_user.id, message_id=update.message.message_id
-            )
-    except Exception as e:
-        logger.warning(f"Failed to delete user message: {e}")
 
 
 # --- Start Add Product Conversation Handlers ---
@@ -73,7 +52,7 @@ async def add_product_start(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def received_product_name(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    await _delete_user_message(update, context)
+    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
     product_name = update.message.text
     if not product_name or not product_name.strip():
         await update.message.reply_text(
@@ -84,7 +63,9 @@ async def received_product_name(
     context.user_data["new_product"]["name"] = product_name.strip()
 
     # NEW LINE: Delete old message
-    await _cleanup_previous_message(context, update.effective_chat.id)
+    last_msg_id = context.user_data.get("last_bot_msg_id")
+    if last_msg_id:
+        schedule_deletion(context, update.effective_chat.id, last_msg_id, delay=3.0)
 
     # UPDATED LINE: Capture sent message
     sent_message = await update.message.reply_text(
@@ -100,7 +81,7 @@ async def received_product_name(
 async def received_product_description(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    await _delete_user_message(update, context)
+    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
     desc = update.message.text
     if not desc or not desc.strip():
         await update.message.reply_text(
@@ -110,7 +91,9 @@ async def received_product_description(
 
     context.user_data["new_product"]["description"] = desc.strip()
 
-    await _cleanup_previous_message(context, update.effective_chat.id)
+    last_msg_id = context.user_data.get("last_bot_msg_id")
+    if last_msg_id:
+        schedule_deletion(context, update.effective_chat.id, last_msg_id, delay=3.0)
 
     sent_message = await update.message.reply_text(
         "Description noted.\n\nNow, what's the price? (e.g., 10.99 or 5)"
@@ -124,7 +107,7 @@ async def received_product_description(
 async def received_product_price(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    await _delete_user_message(update, context)
+    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
     price_text = update.message.text
     try:
         price = float(price_text)
@@ -132,7 +115,9 @@ async def received_product_price(
             raise ValueError
         context.user_data["new_product"]["price"] = price
 
-        await _cleanup_previous_message(context, update.effective_chat.id)
+        last_msg_id = context.user_data.get("last_bot_msg_id")
+        if last_msg_id:
+            schedule_deletion(context, update.effective_chat.id, last_msg_id, delay=3.0)
 
         sent_message = await update.message.reply_text(
             f"Price set to ${price:.2f}.\n\nHow many units are available? (e.g., 10)"
@@ -151,7 +136,7 @@ async def received_product_price(
 async def received_product_quantity(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    await _delete_user_message(update, context)
+    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
     qty_text = update.message.text
     try:
         qty = int(qty_text)
@@ -159,7 +144,9 @@ async def received_product_quantity(
             raise ValueError
         context.user_data["new_product"]["quantity"] = qty
 
-        await _cleanup_previous_message(context, update.effective_chat.id)
+        last_msg_id = context.user_data.get("last_bot_msg_id")
+        if last_msg_id:
+            schedule_deletion(context, update.effective_chat.id, last_msg_id, delay=3.0)
 
         sent_message = await update.message.reply_text(
             f"Quantity set to {qty}.\n\nNow, please specify a category (e.g. 'Dairy')."
@@ -178,7 +165,7 @@ async def received_product_quantity(
 async def received_product_category(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    await _delete_user_message(update, context)
+    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
     cat = update.message.text
     if not cat or not cat.strip():
         await update.message.reply_text(
@@ -188,7 +175,9 @@ async def received_product_category(
 
     context.user_data["new_product"]["category"] = cat.strip()
 
-    await _cleanup_previous_message(context, update.effective_chat.id)
+    last_msg_id = context.user_data.get("last_bot_msg_id")
+    if last_msg_id:
+        schedule_deletion(context, update.effective_chat.id, last_msg_id, delay=3.0)
 
     sent_message = await update.message.reply_text(
         "Category set.\n\n"
@@ -204,28 +193,34 @@ async def received_product_category(
 async def received_product_image(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    await _delete_user_message(update, context)
+    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
     """Stores the file_id of the largest available photo size."""
     photo_file = update.message.photo[-1]  # Get the largest size
     context.user_data["new_product"]["image_file_id"] = photo_file.file_id
 
-    await _cleanup_previous_message(context, update.effective_chat.id)
+    last_msg_id = context.user_data.get("last_bot_msg_id")
+    if last_msg_id:
+        schedule_deletion(context, update.effective_chat.id, last_msg_id, delay=3.0)
 
     await _send_confirmation(update, context)
     return PRODUCT_CONFIRMATION
 
 
 async def skip_product_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await _delete_user_message(update, context)
+    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
     """Sets image_file_id to None and proceeds."""
     context.user_data["new_product"]["image_file_id"] = None
 
-    await _cleanup_previous_message(context, update.effective_chat.id)  # deletes category
+    last_msg_id = context.user_data.get("last_bot_msg_id")
+    if last_msg_id:
+        schedule_deletion(context, update.effective_chat.id, last_msg_id, delay=3.0)
 
     sent_message = await update.message.reply_text("No image added.")
     context.user_data["last_bot_msg_id"] = sent_message.message_id
 
-    await _cleanup_previous_message(context, update.effective_chat.id)  # deletes "No image added."
+    last_msg_id = context.user_data.get("last_bot_msg_id")
+    if last_msg_id:
+        schedule_deletion(context, update.effective_chat.id, last_msg_id, delay=3.0)
 
     await _send_confirmation(update, context)
     return PRODUCT_CONFIRMATION
