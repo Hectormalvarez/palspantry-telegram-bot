@@ -25,7 +25,13 @@ This roadmap defines the critical path to a functional "Minimum Viable Product."
 * [x] **Admin Alerts:** Trigger a Telegram message to the Owner ID when a new order is inserted.
 * [x] **Polish:** Admin UI/UX Cleanup (Delete intermediate messages).
 
-## Version 0.3: The Owner Dashboard (🚧 In Progress)
+## Version 0.2.5: Navigation & State Refinement (🚧 In Progress)
+**Focus:** Creating a persistent, state-aware user experience.
+* [ ] **Home Dashboard Logic:** Create a centralized `render_home_view(user_id)` function that checks cart status.
+* [ ] **Smart /start:** Update `/start` to use the Home Dashboard (showing "Resume Shopping" or "Checkout" if items exist).
+* [ ] **Loop Closure:** Update "Close Shop" button to edit the message back to the Home Dashboard instead of sending a "Closed" text.
+
+## Version 0.3: The Owner Dashboard (Planned)
 **Focus:** Enabling the Owner to fulfill.
 * [ ] **Order List Command:**
     * `/orders`: List "Pending" orders (showing Order ID, Customer, Total).
