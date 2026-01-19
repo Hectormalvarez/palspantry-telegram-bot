@@ -6,34 +6,31 @@ This roadmap defines the critical path to a functional "Minimum Viable Product."
 
 ---
 
-## Phase 2: The Foundation
+## Version 0.1: The Foundation (✅ Completed)
 **Focus:** Reliability & Data Integrity.
 * [x] **Test SQLite Persistence:** Verify schema creation, data types, and constraints.
 * [x] **Migrate Bot:** Switch `bot_main.py` to use `SQLitePersistence` exclusively.
 * [x] **Image Persistence:** Ensure file_ids for product images are stored/retrieved correctly.
 * [x] **Cleanup:** Remove `InMemoryPersistence` to prevent technical debt.
 
-## Milestone 4: The Transaction Loop
+## Version 0.2: The Customer Transaction Loop (✅ Completed)
 **Focus:** Enabling the Customer to buy.
-* [x] Database: Create `orders` and `order_items` tables
-* [x] Persistence: Implement `create_order` (Atomic Transaction)
-* [x] UI: Wire 'Checkout' button to `create_order`
+* [x] **Database:** Create `orders` and `order_items` tables.
+* [x] **Persistence:** Implement `create_order` (Atomic Transaction).
+* [x] **UI:** Wire 'Checkout' button to `create_order`.
 * [x] **Customer UX:**
     * Send "Order Receipt" message to customer.
     * Clear the user's cart after successful order.
+    * User Guidance (/start and Help handlers).
+* [x] **Admin Alerts:** Trigger a Telegram message to the Owner ID when a new order is inserted.
+* [x] **Polish:** Admin UI/UX Cleanup (Delete intermediate messages).
 
-## Milestone 4.5: MVP Polish
-* [x] User Guidance (/start and Help handlers).
-* [ ] Enhanced Order Receipts (User summary).
-* [x] Admin Notifications (Notify owner on purchase).
-* [ ] UI/UX Cleanup (Delete intermediate admin messages).
-
-## Phase 4: The Owner Dashboard
+## Version 0.3: The Owner Dashboard (🚧 In Progress)
 **Focus:** Enabling the Owner to fulfill.
-* [ ] **Notifications:** Trigger a Telegram message to the Owner ID when a new order is inserted.
-* [ ] **Order Management Commands:**
-    * `/orders`: List "Pending" orders.
-    * `/order <id>`: View details of a specific order.
+* [ ] **Order List Command:**
+    * `/orders`: List "Pending" orders (showing Order ID, Customer, Total).
+* [ ] **Order Detail Command:**
+    * `/order <id>`: View details of a specific order (Items, Quantities).
 * [ ] **Status Workflow:**
     * Add controls to change order status: `Pending` -> `Ready` -> `Completed`.
     * Notify Customer on status change.
