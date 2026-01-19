@@ -89,6 +89,7 @@ async def test_received_product_name_valid(
     mock_update_message.effective_user = mocker.MagicMock(
         spec=User, id=123
     )  # Add for logger
+    mock_update_message.message.message_id = 555
 
     next_state = await add_product.received_product_name(
         mock_update_message, mock_telegram_context
@@ -99,6 +100,7 @@ async def test_received_product_name_valid(
     mock_update_message.message.reply_text.assert_called_once_with(
         f"Name set to '{product_name}'.\n\nNow, please enter a description."
     )
+    mock_telegram_context.bot.delete_message.assert_any_call(chat_id=123, message_id=555)
 
 
 @pytest.mark.asyncio
