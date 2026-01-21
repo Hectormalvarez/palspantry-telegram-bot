@@ -37,3 +37,4 @@ async def test_get_home_menu_active_cart(mock_persistence_layer):
     assert "You have items in your cart" in text
     assert any("Continue Shopping" in button.text for row in keyboard.inline_keyboard for button in row)
     assert any("Checkout" in button.text for row in keyboard.inline_keyboard for button in row)
+    assert any(button.callback_data == "view_cart" for row in keyboard.inline_keyboard for button in row)

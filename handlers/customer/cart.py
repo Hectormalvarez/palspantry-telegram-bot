@@ -4,6 +4,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
 
+from handlers.utils import schedule_deletion
 from persistence.abstract_persistence import AbstractPantryPersistence
 
 
@@ -21,37 +22,41 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         # Empty cart
         text = "Your cart is empty."
         keyboard = [[InlineKeyboardButton("Continue Shopping", callback_data="navigate_to_categories")]]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text(text=text, reply_markup=reply_markup)
-        return
+    else:
+        # Cart has items
+        total = 0.0
+        message_lines = []
+        for product_id, quantity in cart_items.items():
+            product = await persistence.get_product(product_id)
+            if product:
+                name = product["name"]
+                price = product["price"]
+                item_total = quantity * price
+                total += item_total
+                message_lines.append(f"- {name} ({quantity} x ${price:.2f}) = ${item_total:.2f}")
+            else:
+                # Product not found, perhaps skip or handle
+                pass
 
-    # Cart has items
-    total = 0.0
-    message_lines = []
-    for product_id, quantity in cart_items.items():
-        product = await persistence.get_product(product_id)
-        if product:
-            name = product["name"]
-            price = product["price"]
-            item_total = quantity * price
-            total += item_total
-            message_lines.append(f"- {name} ({quantity} x ${price:.2f}) = ${item_total:.2f}")
-        else:
-            # Product not found, perhaps skip or handle
-            pass
+        message_lines.append(f"Total: ${total:.2f}")
+        text = "\n".join(message_lines)
 
-    message_lines.append(f"Total: ${total:.2f}")
-    text = "\n".join(message_lines)
-
-    keyboard = [
-        [
-            InlineKeyboardButton("Checkout", callback_data="cart_checkout"),
-            InlineKeyboardButton("Clear Cart", callback_data="clear_cart"),
-            InlineKeyboardButton("Continue Shopping", callback_data="navigate_to_categories"),
+        keyboard = [
+            [
+                InlineKeyboardButton("Checkout", callback_data="cart_checkout"),
+                InlineKeyboardButton("Clear Cart", callback_data="clear_cart"),
+                InlineKeyboardButton("Continue Shopping", callback_data="navigate_to_categories"),
+            ]
         ]
-    ]
+
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(text=text, reply_markup=reply_markup)
+
+    if update.callback_query:
+        await update.callback_query.answer()
+        await update.callback_query.edit_message_text(text=text, reply_markup=reply_markup)
+    else:
+        await update.message.reply_text(text=text, reply_markup=reply_markup)
+        schedule_deletion(context, update.effective_chat.id, update.message.message_id)
 
 
 async def handle_clear_cart(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -113,5 +118,6 @@ async def handle_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 # Handler registration
 cart_command_handler = CommandHandler("cart", handle_cart_command)
+view_cart_handler = CallbackQueryHandler(handle_cart_command, pattern="^view_cart$")
 clear_cart_handler = CallbackQueryHandler(handle_clear_cart, pattern="^clear_cart$")
 checkout_handler = CallbackQueryHandler(handle_checkout, pattern="^cart_checkout$")

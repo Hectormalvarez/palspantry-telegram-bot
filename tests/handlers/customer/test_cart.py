@@ -136,3 +136,47 @@ async def test_handle_checkout_success(
     assert "Burger" in notification_text
     assert "Fries" in notification_text
     assert "x 1" in notification_text
+
+
+@pytest.mark.asyncio
+async def test_handle_cart_cleanup(
+    mocker,
+    mock_update_message: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
+    """Test /cart command with cleanup scheduling."""
+    # Arrange
+    mock_update_message.effective_user = mocker.MagicMock(spec=User, id=98765)
+    mock_update_message.callback_query = None  # Ensure it's treated as a command
+    mock_update_message.message.message_id = 123
+    mock_telegram_context.job_queue = mocker.Mock()
+    mock_persistence_layer.get_cart_items.return_value = {"item_1": 1}
+    mock_persistence_layer.get_product.return_value = {"name": "Bread", "price": 3.00}
+
+    # Act
+    await cart.handle_cart_command(mock_update_message, mock_telegram_context)
+
+    # Assert
+    mock_telegram_context.job_queue.run_once.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_handle_cart_via_callback(
+    mocker,
+    mock_update_callback_query: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
+    mock_persistence_layer: AbstractPantryPersistence,
+):
+    """Test handle_cart_command via callback query."""
+    # Arrange
+    mock_update_callback_query.callback_query.data = "view_cart"
+    mock_persistence_layer.get_cart_items.return_value = {"item_1": 1}
+    mock_persistence_layer.get_product.return_value = {"name": "Bread", "price": 3.00}
+
+    # Act
+    await cart.handle_cart_command(mock_update_callback_query, mock_telegram_context)
+
+    # Assert
+    mock_update_callback_query.callback_query.answer.assert_called_once()
+    mock_update_callback_query.callback_query.edit_message_text.assert_called_once()

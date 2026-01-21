@@ -19,6 +19,7 @@ from handlers.customer.shop import (
 )
 from handlers.customer.cart import (
     cart_command_handler,
+    view_cart_handler,
     clear_cart_handler,
     checkout_handler,
 )
@@ -54,6 +55,7 @@ def main() -> None:
     application.add_handler(product_selection_handler)
     application.add_handler(add_to_cart_handler)
     application.add_handler(cart_command_handler)
+    application.add_handler(view_cart_handler)
     application.add_handler(clear_cart_handler)
     application.add_handler(checkout_handler)
     application.add_handler(close_shop_handler)

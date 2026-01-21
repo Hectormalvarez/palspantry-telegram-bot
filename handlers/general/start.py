@@ -32,7 +32,7 @@ async def get_home_menu(persistence: AbstractPantryPersistence, user_id: int, fi
         text = f"Welcome back, {first_name}!\n\nYou have items in your cart."
         keyboard = [
             [InlineKeyboardButton("🛍️ Continue Shopping", callback_data="shop_start")],
-            [InlineKeyboardButton("🛒 Checkout", callback_data="cart_checkout")]
+            [InlineKeyboardButton("🛒 Checkout", callback_data="view_cart")]
         ]
     else:
         text = f"Welcome, {first_name}! \n\nI am the PalsPantry Bot. I can help you browse our inventory and place orders."
