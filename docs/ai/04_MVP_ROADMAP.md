@@ -25,11 +25,16 @@ This roadmap defines the critical path to a functional "Minimum Viable Product."
 * [x] **Admin Alerts:** Trigger a Telegram message to the Owner ID when a new order is inserted.
 * [x] **Polish:** Admin UI/UX Cleanup (Delete intermediate messages).
 
-## Version 0.2.5: Navigation & State Refinement (🚧 In Progress)
+## Version 0.2.5: Navigation & State Refinement (✅ Completed)
 **Focus:** Creating a persistent, state-aware user experience.
-* [ ] **Home Dashboard Logic:** Create a centralized `render_home_view(user_id)` function that checks cart status.
-* [ ] **Smart /start:** Update `/start` to use the Home Dashboard (showing "Resume Shopping" or "Checkout" if items exist).
-* [ ] **Loop Closure:** Update "Close Shop" button to edit the message back to the Home Dashboard instead of sending a "Closed" text.
+* [x] **Home Dashboard Logic:** Create a centralized `render_home_view(user_id)` function that checks cart status.
+* [x] **Smart /start:** Update `/start` to use the Home Dashboard (showing "Resume Shopping" or "Checkout" if items exist).
+* [x] **Loop Closure:** Update "Close Shop" button to edit the message back to the Home Dashboard instead of sending a "Closed" text.
+
+## Version 0.2.7: Architecture & Maintenance (🚧 In Progress)
+**Focus:** preparing the codebase for scale by decoupling text from logic.
+* [ ] **Centralized Message Registry:** Create a `messages.py` or `resources/strings.py` to hold all static text.
+* [ ] **Refactor Handlers:** Replace hardcoded strings in `handlers/` with references to the registry.
 
 ## Version 0.3: The Owner Dashboard (Planned)
 **Focus:** Enabling the Owner to fulfill.
