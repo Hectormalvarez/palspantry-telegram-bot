@@ -4,13 +4,14 @@
 
 PalsPantry is a Python-based Telegram bot designed to enable a single shop owner to manage an inventory of products and for customers to browse these products and place simple orders. The bot is built using the `python-telegram-bot` library and emphasizes a clean, abstracted persistence layer for future flexibility.
 
-The initial MVP focuses on core product management for the shop owner and a browse-to-order-receipt flow for customers, without real-time payment processing.
+The current implementation includes full product management, customer browsing with cart and checkout, order creation with owner notifications, and a persistent home dashboard.
 
-## Core Features (MVP Focus)
+## Core Features
 
 ### General
 
 * `/help`: View a list of available commands.
+* `/start`: Persistent home dashboard aware of cart status.
 
 ### For the Shop Owner (Bot Owner):
 * **Bot Ownership:** Securely designate a single bot owner via the `/set_owner` command (first user to issue becomes owner).
@@ -23,36 +24,29 @@ The initial MVP focuses on core product management for the shop owner and a brow
         * Category
         * Image (optional)
     * `/myproducts`: View a list of all added products.
-    * (Future MVP) Edit existing products.
-    * (Future MVP) Delete products.
-    * (Future MVP) Quick stock updates (e.g., `/setstock <product_id> <quantity>`).
-* **Order Management:**
-    * Receive notifications for new customer orders.
-    * Ability to view orders.
-    * Ability to update order status (e.g., Pending, Preparing, Ready, Completed, Cancelled).
+* **Order Notifications:** Automatic Telegram messages when customers place orders.
 
 ### For the Customer:
 * **Browse Products:**
-    * Start shopping via a command like `/shop` or `/menu`.
-    * Browse products by categories.
+    * Start shopping via `/start` dashboard or `/shop`.
+    * Browse products by categories with navigation buttons.
     * View detailed information for each product (including image).
 * **Shopping Cart:**
-    * Add desired products to a temporary shopping cart (stored in user session data).
-    * View the cart contents (`/cart`).
-    * (Future MVP) Modify item quantities or remove items from the cart.
-* **Place Order:**
-    * "Checkout" the cart to place an order.
-    * The bot generates an order receipt for the customer.
-    * No real-time payment processing in MVP.
-* **Order Status:**
-    * (Future MVP) Customers can check the status of their orders.
+    * Add products to cart.
+    * View cart contents and total.
+    * Clear cart.
+* **Checkout & Orders:**
+    * Checkout creates order in database.
+    * Receive order receipt.
+    * Cart clears after order.
+    * Order stored with snapshot of product data.
 
 ## User Experience (UX) Flow Highlights
 
 ### Shop Owner UX:
 1.  **Initial Setup:**
     * Run `/set_owner` to claim bot ownership.
-2.  **Adding a Product (`/addproduct` - In Progress):**
+2.  **Adding a Product (`/addproduct`):**
     * A `ConversationHandler` guides the owner:
         * Bot: "What's the product's name?" -> User provides name.
         * Bot: "Now, a description?" -> User provides description.
@@ -62,28 +56,24 @@ The initial MVP focuses on core product management for the shop owner and a brow
         * Bot: "Optionally, send an image (or /skip)." -> User sends image or skips.
         * Bot: Shows a summary and asks for confirmation (`[Confirm & Add] [Edit] [Cancel]`).
 3.  **Managing Products:**
-    * Use `/myproducts` to see current inventory, with options to manage each item.
+    * Use `/myproducts` to see current inventory.
 4.  **Handling Orders:**
-    * Receives a message when a customer places an order.
-    * Uses commands/inline keyboards to update the status of an order (e.g., `/updatestatus <order_id> <status>`).
+    * Receives automatic notification when a customer places an order.
 
 ### Customer UX:
-1.  **Start Shopping:**
-    * Customer sends `/shop` or `/menu`.
+1.  **Home Dashboard:**
+    * `/start` shows dashboard: "Shop" or "Resume Shopping" if cart has items.
 2.  **Navigation:**
-    * Bot presents categories (e.g., via inline keyboards).
-    * Customer selects a category to view products.
-    * Products are listed (potentially with pagination for many items), each with a "View Details" option.
+    * Select category to view products.
+    * Products listed with "View Details" buttons.
 3.  **Product Interaction:**
-    * Customer views full product details (name, description, price, image).
-    * "Add to Cart" button available on product detail view.
+    * View full details (name, description, price, image).
+    * "Add to Cart" button.
 4.  **Cart Management:**
-    * Customer uses `/cart` to see items, total.
-    * Options to modify cart (future MVP) or "Place Order".
+    * `/cart` shows items, total, "Checkout" or "Clear Cart".
 5.  **Placing an Order:**
-    * Customer confirms order from the cart.
-    * Bot provides an "order receipt" message.
-    * Bot informs the shop owner of the new order.
+    * Checkout creates order, clears cart, sends receipt.
+    * Owner notified of new order.
 
 ## Technical Stack & Key Components
 
@@ -105,46 +95,74 @@ The initial MVP focuses on core product management for the shop owner and a brow
 
 ## Current Development State & Workflow
 
-This project is being developed iteratively.
+This project is being developed iteratively with versioned milestones.
 
-1.  **Milestone 1: Robust Foundation & In-Memory Persistence (✅ COMPLETE)**
-    * Project setup, basic bot connection.
-    * Configuration management (`config.py`, `.env`).
-    * Structured Logging.
-    * Persistence Abstraction Layer (`AbstractPantryPersistence`).
-    * `InMemoryPersistence` for bot owner.
-    * `/set_owner` command implemented using PAL.
-    * Unit tests for core setup, owner logic, and `InMemoryPersistence` (owner part).
-    * Extended PAL & `InMemoryPersistence` for Product Management.
-    * Unit tests for Product Management in `InMemoryPersistence`.
+### Version 0.1: The Foundation (✅ Completed)
+* Project setup, configuration, logging.
+* Persistence Abstraction Layer (PAL).
+* SQLite migration from in-memory.
+* Bot owner management.
+* Product management with images.
 
-2.  **Milestone 2: Core Product & Shop Features (✅ COMPLETE)**
-    * The `/addproduct` feature has been successfully modularized.
+### Version 0.2: The Customer Transaction Loop (✅ Completed)
+* Customer navigation (categories, product details, back buttons).
+* Cart system (add, view, clear).
+* Checkout logic (creates order, clears cart, notifies owner).
 
-4.  **Milestone 4: The Transaction Loop (✅ COMPLETE)**
+### Version 0.2.5: Navigation & State Refinement (✅ Completed)
+* Persistent home dashboard (/start awareness).
+* Updated "Close Shop" to navigate back to dashboard.
+
+### Version 0.2.7: Architecture & Maintenance (🚧 In Progress)
+* Centralized Message Registry to decouple text from logic.
+* Refactor handlers to use the registry.
 
 
 ## Project Structure
 
 ```
 palspantry-telegram-bot/
-├── bot_main.py             # Main application logic, command handlers
-├── config.py               # Configuration loading
-├── persistence/
-│   ├── __init__.py
-│   ├── abstract_persistence.py # PAL interface
-│   └── in_memory_persistence.py # In-memory data storage
-├── handlers/
+├── bot_main.py             # Main application logic and command handlers
+├── config.py               # Configuration loading from environment
+├── handlers/               # Modular handler structure
+│   ├── customer/
+│   │   ├── cart.py         # Cart management (add, view, clear)
+│   │   └── shop.py         # Product browsing and navigation
+│   ├── general/
+│   │   ├── start.py        # Persistent home dashboard
+│   │   ├── help.py         # Help command
+│   │   └── unknown.py      # Unknown command handler
+│   ├── owner/
+│   │   └── set_owner.py    # Bot ownership setup
 │   └── product/
-│       └── add_product.py
-└── tests/
-    └── handlers/
-        └── product/
-            └── test_add_product.py
+│       └── add_product.py  # Product addition with conversation
+├── persistence/            # Persistence Abstraction Layer
+│   ├── abstract_persistence.py # PAL interface
+│   ├── sqlite_persistence.py   # SQLite implementation
+│   └── in_memory_persistence.py # Deprecated in-memory implementation
+├── tests/                  # Comprehensive test suite
+│   ├── conftest.py         # Shared test fixtures
+│   ├── test_bot_setup.py   # Bot initialization tests
+│   ├── handlers/
+│   │   ├── customer/
+│   │   ├── general/
+│   │   └── product/
+│   └── persistence/
+├── docs/                   # AI context and documentation
+│   └── ai/
+│       ├── 00_PROJECT_CONTEXT.md
+│       ├── 01_TECH_STACK.md
+│       ├── 02_DATA_SCHEMA.md
+│       ├── 03_CURRENT_STATE.md
+│       └── 04_MVP_ROADMAP.md
 ├── requirements.txt        # Python dependencies
-├── .env.example            # Example environment file (actual .env is gitignored)
+├── requirements-dev.txt    # Development dependencies
+├── pyproject.toml          # Project configuration
+├── pytest.ini              # Pytest configuration
+├── .pylintrc               # Linting configuration
+├── .env.sample             # Environment variables template
 ├── .gitignore
-└── pytest.ini              # Pytest configuration
+└── README.md
 ```
 
 ## Getting Started (Local Development)
@@ -160,7 +178,7 @@ palspantry-telegram-bot/
     pip install -r requirements.txt
     ```
 4.  **Set up your Bot Token:**
-    * Copy `.env.example` to `.env`.
+    * Copy `.env.sample` to `.env`.
     * Edit `.env` and add your Telegram Bot token:
         ```
         BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
@@ -174,11 +192,16 @@ palspantry-telegram-bot/
     pytest
     ```
 
-## Future Considerations (Post-MVP)
+## Future Considerations
 
-* More robust persistence
-* Cloud deployment (e.g., AWS Lambda with CDK).
-* Advanced UX: Richer inline keyboard navigation, pagination for long lists.
-* Telegram Payments integration.
-* Notifications for stock running low.
-* User accounts for customers (order history, preferences).
+### Immediate Next Steps (Version 0.2.7+)
+* **Centralized String Registry:** Create `resources/strings.py` to hold all hardcoded text, decoupling messages from logic.
+* **Owner Dashboard:** Implement commands for owners to list and manage orders (`/orders`, `/order <id>`).
+* **Customer Order History:** Allow customers to view their past orders.
+
+### Post-MVP Enhancements
+* Real-time payment processing (Stripe/Telegram Payments).
+* Web dashboard for owners.
+* Advanced analytics and reporting.
+* Customer profiles and preferences.
+* Cloud deployment options.

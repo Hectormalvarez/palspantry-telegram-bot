@@ -1,7 +1,7 @@
 # Database Schema & Data Models
 
 ## 1. Design Decisions
-* **Currency:** Stored as `INTEGER` (cents) to avoid floating-point errors. ($10.99 = `1099`).
+* **Currency:** `orders` and `order_items` currently use REAL (floats) for totals, while `products` uses INTEGER (cents).
 * **IDs:**
     * `products`, `orders`: UUID Strings.
     * `users`: Telegram User ID (Integer).
@@ -53,16 +53,15 @@
 | :--- | :--- | :--- |
 | `id` | TEXT PRIMARY KEY | UUID |
 | `user_id` | INTEGER | FK -> users.id |
-| `total_cents` | INTEGER | Snapshot of total cost |
-| `status` | TEXT | 'PENDING', 'PAID', 'COMPLETED', 'CANCELLED' |
-| `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP |
+| `total_amount` | REAL | Snapshot of total cost (Float) |
+| `status` | TEXT | 'completed' (Default) |
+| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP |
 
 ### `order_items`
 *Line items for orders (Snapshot of product state at time of purchase).*
 | Column | Type | Notes |
 | :--- | :--- | :--- |
-| `id` | INTEGER PRIMARY KEY | Auto-Increment |
 | `order_id` | TEXT | FK -> orders.id |
-| `product_name` | TEXT | Stored in case product is renamed/deleted |
-| `unit_price_cents` | INTEGER | Price at moment of purchase |
+| `product_id` | TEXT | FK -> products.id |
 | `quantity` | INTEGER | |
+| `unit_price` | REAL | Price at moment of purchase (Float) |
