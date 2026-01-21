@@ -1,21 +1,16 @@
-======== FILE: docs/ai/03_CURRENT_STATE.md ========
 ## 1. Active Milestone
-**Milestone 4.5: MVP Polish**
-* **Goal:** Implement the order creation process, converting cart items into orders.
+**Version 0.2.7: Architecture & Maintenance**
+* **Goal:** Prepare codebase for scale by decoupling text from logic (Centralized Message Registry).
 * **Status:** In Progress
-* **Recent Achievements:**
-   * Implemented Atomic Order Creation (Database Transaction).
-   * Implemented Checkout Handler.
-   * Wired End-to-End Cart-to-Order flow.
-   * Fully implemented SQLite Persistence.
-   * Completed End-to-End Order Transaction Loop.
-   * Implemented /start handler with 'Shop Now' CTA.
-   * Implemented Catch-all handler for unknown inputs.
-   * Enriched Owner Notification with Item Details.
-   * Implemented /help command for user guidance.
-* **Current Task:** UI/UX Cleanup (Reducing chat clutter during navigation)
-* **Context:** We will create the order tables and the create_order method to handle transactions from cart to order.
+* **Current Task:** Create `tests/test_strings.py` and `resources/strings.py`.
+* **Context:** The "Order Transaction Loop" (Milestone 2) is complete. We are pausing new features to refactor hardcoded strings into a centralized registry.
 
-## 2. Immediate Next Steps
-* Improve Checkout Receipt (Show summary, not just ID).
-* Reduce chat clutter in Admin "Add Product" flow.
+2. Recent Achievements
+
+    (v0.2.0) Completed End-to-End Order Transaction Loop (Cart -> Checkout -> Database).
+
+    (v0.2.0) Implemented Atomic Order Creation in SQLite.
+
+    (v0.2.5) Implemented Persistent Home Dashboard logic.
+
+    (v0.2.5) Updated /start to be state-aware (Shop vs Resume).
