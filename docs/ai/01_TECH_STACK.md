@@ -51,3 +51,12 @@ def calculate_total(price: int, quantity: int) -> int:
     Framework: pytest with pytest-asyncio.
 
     Mocking: Use unittest.mock to mock the Persistence Layer when testing Handlers.
+
+## 6. String Management (v0.2.7+)
+* **Pattern:** Centralized Nested Classes.
+* **File:** `resources/strings.py`
+* **Structure:**
+  - `class Strings`: Root class.
+  - Nested classes (e.g., `class Cart`) for grouping static text.
+  - Static methods for messages requiring dynamic variables (e.g., formatting names/prices).
+* **Rule:** Do not hardcode user-facing text in handlers. Import from `resources.strings`.
