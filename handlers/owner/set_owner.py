@@ -2,6 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from persistence.abstract_persistence import AbstractPantryPersistence
+from resources.strings import Strings
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 user_id,
                 username,
             )
-            await update.message.reply_text("You are now the owner of this bot.")
+            await update.message.reply_text(Strings.Owner.SET_SUCCESS)
         else:
             # This case might be rare if is_owner_set() was false
             # or if set_bot_owner had other internal reasons to fail.
@@ -40,10 +41,7 @@ async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 username,
                 current_owner,
             )
-            await update.message.reply_text(
-                "Could not set owner at this time. "
-                "An owner might already be registered."
-            )
+            await update.message.reply_text(Strings.Owner.SET_FAILED)
     else:
         current_owner_id = await persistence.get_bot_owner()
         logger.warning(
@@ -53,7 +51,7 @@ async def set_owner(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             username,
             current_owner_id,
         )
-        await update.message.reply_text("An owner has already been set.")
+        await update.message.reply_text(Strings.Owner.ALREADY_SET)
 
 
 set_owner_handler = CommandHandler("set_owner", set_owner)

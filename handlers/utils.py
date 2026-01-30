@@ -2,6 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 from persistence.abstract_persistence import AbstractPantryPersistence
+from resources.strings import Strings
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +46,7 @@ async def owner_only_command(
     owner_id = await persistence.get_bot_owner()
     if not owner_id or update.effective_user.id != owner_id:
         if update.message:  # Check if update.message exists
-            await update.message.reply_text(
-                "Sorry, this command is only for the bot owner."
-            )
+            await update.message.reply_text(Strings.Owner.NOT_OWNER)
         logger.warning(
             f"User {update.effective_user.id} (not owner) tried an owner command."
         )
