@@ -3,9 +3,7 @@ import logging
 from telegram.ext import ApplicationBuilder, CommandHandler
 
 import config
-from handlers import general, customer
-from handlers.owner.set_owner import set_owner_handler
-from handlers.product.add_product import get_add_product_handler
+from handlers import general, customer, owner, product
 from persistence.sqlite_persistence import SQLitePersistence
 
 
@@ -27,8 +25,8 @@ def main() -> None:
     application.bot_data["persistence"] = persistence_instance
 
     # Register Handlers
-    application.add_handler(set_owner_handler)
-    application.add_handler(get_add_product_handler())
+    owner.register_handlers(application)
+    product.register_handlers(application)
     general.register_handlers(application)
     customer.register_handlers(application)
 

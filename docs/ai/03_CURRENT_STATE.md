@@ -2,7 +2,7 @@
 **Version 0.3.0: Owner Dashboard (Next)**
 * **Goal:** Empower the owner to view and manage incoming orders.
 * **Status:** Awaiting start of v0.3.0.
-* **Context:** The "Order Transaction Loop" (Milestone 2) and "Home Dashboard" (Milestone 2.5) are complete. String Centralization (v0.2.7) is complete. Refactoring Handler Registration (General Handlers) is complete. Refactoring Handler Registration (Customer Handlers) is in progress.
+* **Context:** The "Order Transaction Loop" (Milestone 2) and "Home Dashboard" (Milestone 2.5) are complete. String Centralization (v0.2.7) is complete. Refactoring Handler Registration (General Handlers) is complete. Refactoring Handler Registration (Customer Handlers) is complete. Refactoring Handler Registration (Owner & Product Handlers) is in progress.
 
 2. Recent Achievements
     (v0.2.7) Completed v0.2.7: Full Message Registry & Architecture Refactor.
