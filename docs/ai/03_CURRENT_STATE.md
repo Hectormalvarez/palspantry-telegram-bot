@@ -2,7 +2,7 @@
 **Version 0.2.7: Architecture & Maintenance**
 * **Goal:** Prepare codebase for scale by decoupling text from logic (Centralized Message Registry).
 * **Status:** In Progress
-* **Current Task:** Implementing resources/strings.py (Green State).
+* **Current Task:** Refactoring General Handlers (Tests Updated).
 * **Context:** The "Order Transaction Loop" (Milestone 2) and "Home Dashboard" (Milestone 2.5) are complete. New features are paused until strings are centralized.
 
 2. Recent Achievements

@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import ANY
+from resources.strings import Strings
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -23,5 +24,4 @@ async def test_unknown_command(
     mock_update_message.message.reply_text.assert_called_once()
     call_args = mock_update_message.message.reply_text.call_args
     reply_text = call_args.args[0] if call_args.args else call_args.kwargs.get("text")
-    assert "I didn't understand" in reply_text
-    assert "/shop" in reply_text or "/start" in reply_text
+    assert reply_text == Strings.Error.UNKNOWN_COMMAND
