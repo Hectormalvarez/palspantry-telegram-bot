@@ -3,25 +3,9 @@ import logging
 from telegram.ext import ApplicationBuilder, CommandHandler
 
 import config
-from handlers import general
+from handlers import general, customer
 from handlers.owner.set_owner import set_owner_handler
 from handlers.product.add_product import get_add_product_handler
-from handlers.customer.shop import (
-    shop_start_handler,
-    category_selection_handler,
-    product_selection_handler,
-    add_to_cart_handler,
-    close_shop_handler,
-    back_to_categories_handler,
-    back_to_products_handler,
-    shop_home_callback_handler,
-)
-from handlers.customer.cart import (
-    cart_command_handler,
-    view_cart_handler,
-    clear_cart_handler,
-    checkout_handler,
-)
 from persistence.sqlite_persistence import SQLitePersistence
 
 
@@ -46,18 +30,7 @@ def main() -> None:
     application.add_handler(set_owner_handler)
     application.add_handler(get_add_product_handler())
     general.register_handlers(application)
-    application.add_handler(shop_start_handler)
-    application.add_handler(shop_home_callback_handler)
-    application.add_handler(category_selection_handler)
-    application.add_handler(product_selection_handler)
-    application.add_handler(add_to_cart_handler)
-    application.add_handler(cart_command_handler)
-    application.add_handler(view_cart_handler)
-    application.add_handler(clear_cart_handler)
-    application.add_handler(checkout_handler)
-    application.add_handler(close_shop_handler)
-    application.add_handler(back_to_categories_handler)
-    application.add_handler(back_to_products_handler)
+    customer.register_handlers(application)
 
     logger.info("Bot application built and handlers added. Starting polling...")
 
