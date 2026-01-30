@@ -5,6 +5,7 @@ Verification script for PalPantry Telegram Bot environment and API connectivity.
 
 import os
 import sys
+import sqlite3
 from typing import Tuple
 
 try:
@@ -49,6 +50,35 @@ def check_telegram_api(bot_token: str) -> Tuple[bool, str]:
         return False, f"Unexpected error: {str(e)}"
 
 
+def check_sqlite_database() -> Tuple[bool, str]:
+    """Check SQLite database connectivity and structure."""
+    try:
+        db_path = 'pals_pantry.db'
+        if not os.path.exists(db_path):
+            return False, "Database file 'pals_pantry.db' not found"
+        
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Check for tables in the database
+        cursor.execute('SELECT name FROM sqlite_master WHERE type="table";')
+        tables = cursor.fetchall()
+        
+        conn.close()
+        
+        if tables:
+            table_count = len(tables)
+            table_names = [table[0] for table in tables]
+            return True, f"Found {table_count} tables: {', '.join(table_names)}"
+        else:
+            return False, "No tables found in database"
+            
+    except sqlite3.Error as e:
+        return False, f"SQLite error: {str(e)}"
+    except Exception as e:
+        return False, f"Unexpected error: {str(e)}"
+
+
 def main():
     """Main verification function."""
     print("PalPantry Bot Verification")
@@ -73,6 +103,15 @@ def main():
             sys.exit(1)
     else:
         print("[TG]  Telegram API Connection: FAIL (No BOT_TOKEN available)")
+        sys.exit(1)
+    
+    # Check 3: SQLite Database
+    db_ok, db_msg = check_sqlite_database()
+    db_status = "PASS" if db_ok else "FAIL"
+    print(f"[DB]  SQLite Database: {db_status} ({db_msg})")
+    
+    # Exit with code 1 if database check fails
+    if not db_ok:
         sys.exit(1)
     
     print("\nAll checks passed! ✅")
