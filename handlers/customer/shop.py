@@ -7,6 +7,7 @@ from telegram.constants import ParseMode
 from persistence.abstract_persistence import AbstractPantryPersistence
 from handlers.utils import schedule_deletion
 from handlers.general.start import get_home_menu
+from resources.strings import Strings
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ async def _send_category_menu(
     categories = await persistence.get_all_categories()
 
     if not categories:
-        text = "The shop is currently empty. Please check back later!"
+        text = Strings.Shop.EMPTY
         if send_new:
             # Check if there is a message to reply to (command vs callback)
             if update.message:
@@ -57,10 +58,10 @@ async def _send_category_menu(
         keyboard.append(
             [InlineKeyboardButton(category, callback_data=f"category_{category}")]
         )
-    keyboard.append([InlineKeyboardButton("❌ Close", callback_data="close_shop")])
+    keyboard.append([InlineKeyboardButton(Strings.Shop.CLOSE_BTN, callback_data="close_shop")])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    text = "Welcome to PalsPantry! Select a category:"
+    text = Strings.Shop.CATEGORY_HEADER
 
     if send_new:
         chat_id = update.effective_chat.id
@@ -102,7 +103,7 @@ async def _send_product_list(
     products = await persistence.get_products_by_category(category_name)
 
     if not products:
-        text = "No products here."
+        text = Strings.Shop.NO_PRODUCTS
         if send_new:
             await update.effective_chat.send_message(text)
         else:
@@ -111,7 +112,7 @@ async def _send_product_list(
 
     keyboard = []
     for product in products:
-        button_text = f"{product['name']} (${product['price']:.2f})"
+        button_text = Strings.Shop.product_button(product['name'], product['price'])
         keyboard.append(
             [
                 InlineKeyboardButton(
@@ -124,14 +125,14 @@ async def _send_product_list(
     keyboard.append(
         [
             InlineKeyboardButton(
-                "<< Back to Categories", callback_data="navigate_to_categories"
+                Strings.Shop.BACK_TO_CATEGORIES_BTN, callback_data="navigate_to_categories"
             ),
-            InlineKeyboardButton("❌ Close", callback_data="close_shop"),
+            InlineKeyboardButton(Strings.Shop.CLOSE_BTN, callback_data="close_shop"),
         ]
     )
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    text = f"<b>{category_name}</b>"
+    text = Strings.Shop.category_title(category_name)
 
     if send_new:
         await update.effective_chat.send_message(
@@ -155,15 +156,15 @@ async def handle_product_selection(
     product = await persistence.get_product(product_id)
 
     if not product:
-        await query.edit_message_text("Product not found.")
+        await query.edit_message_text(Strings.Shop.PRODUCT_NOT_FOUND)
         return
 
     # Prepare Content
-    caption = (
-        f"<b>{product['name']}</b>\n"
-        f"<i>{product.get('description', '')}</i>\n\n"
-        f"Price: <b>${product['price']:.2f}</b>\n"
-        f"Stock: {product['quantity']} available"
+    caption = Strings.Shop.product_caption(
+        product['name'],
+        product.get('description', ''),
+        product['price'],
+        product['quantity']
     )
 
     category = product.get("category", "Products")
@@ -171,15 +172,15 @@ async def handle_product_selection(
     keyboard = [
         [
             InlineKeyboardButton(
-                "🛒 Add to Cart", callback_data=f"add_to_cart_{product_id}"
+                Strings.Shop.ADD_TO_CART_BTN, callback_data=f"add_to_cart_{product_id}"
             )
         ],
         [
             InlineKeyboardButton(
-                f"<< Back to {category}",
+                Strings.Shop.back_to_category_btn(category),
                 callback_data=f"navigate_to_products_{category}",
             ),
-            InlineKeyboardButton("❌ Close", callback_data="close_shop"),
+            InlineKeyboardButton(Strings.Shop.CLOSE_BTN, callback_data="close_shop"),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -218,16 +219,16 @@ async def handle_add_to_cart(
     product = await persistence.get_product(product_id)
 
     if not product:
-        await query.answer("Product no longer available.", show_alert=True)
+        await query.answer(Strings.Shop.PRODUCT_UNAVAILABLE, show_alert=True)
         return
 
     user_id = update.effective_user.id
     new_quantity = await persistence.add_to_cart(user_id=user_id, product_id=product_id, quantity=1)
 
     if new_quantity:
-        await query.answer(f"{product['name']} added to cart! (Total: {new_quantity})")
+        await query.answer(Strings.Shop.added_to_cart(product['name'], new_quantity))
     else:
-        await query.answer("Error adding to cart. Please try again.", show_alert=True)
+        await query.answer(Strings.Shop.ADD_ERROR, show_alert=True)
 
 
 async def handle_close_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

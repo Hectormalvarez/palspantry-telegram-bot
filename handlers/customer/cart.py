@@ -6,6 +6,7 @@ from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
 
 from handlers.utils import schedule_deletion
 from persistence.abstract_persistence import AbstractPantryPersistence
+from resources.strings import Strings
 
 
 logger = logging.getLogger(__name__)
@@ -20,8 +21,8 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     if not cart_items:
         # Empty cart
-        text = "Your cart is empty."
-        keyboard = [[InlineKeyboardButton("Continue Shopping", callback_data="navigate_to_categories")]]
+        text = Strings.Cart.EMPTY
+        keyboard = [[InlineKeyboardButton(Strings.General.CONTINUE_SHOPPING_BTN, callback_data="navigate_to_categories")]]
     else:
         # Cart has items
         total = 0.0
@@ -33,19 +34,19 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
                 price = product["price"]
                 item_total = quantity * price
                 total += item_total
-                message_lines.append(f"- {name} ({quantity} x ${price:.2f}) = ${item_total:.2f}")
+                message_lines.append(Strings.Cart.item_line(name, quantity, price, item_total))
             else:
                 # Product not found, perhaps skip or handle
                 pass
 
-        message_lines.append(f"Total: ${total:.2f}")
+        message_lines.append(Strings.Cart.total_line(total))
         text = "\n".join(message_lines)
 
         keyboard = [
             [
-                InlineKeyboardButton("Checkout", callback_data="cart_checkout"),
-                InlineKeyboardButton("Clear Cart", callback_data="clear_cart"),
-                InlineKeyboardButton("Continue Shopping", callback_data="navigate_to_categories"),
+                InlineKeyboardButton(Strings.General.CHECKOUT_BTN, callback_data="cart_checkout"),
+                InlineKeyboardButton(Strings.Cart.CLEAR_BTN, callback_data="clear_cart"),
+                InlineKeyboardButton(Strings.General.CONTINUE_SHOPPING_BTN, callback_data="navigate_to_categories"),
             ]
         ]
 
@@ -68,7 +69,7 @@ async def handle_clear_cart(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     persistence: AbstractPantryPersistence = context.bot_data["persistence"]
     await persistence.clear_cart(user_id=user_id)
 
-    await query.edit_message_text(text="Cart cleared.")
+    await query.edit_message_text(text=Strings.Cart.CLEARED)
 
 
 async def handle_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -79,7 +80,7 @@ async def handle_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     order_id = await persistence.create_order(user_id=user_id)
     if order_id is None:
-        await query.answer(text="Cannot place order. Is your cart empty?", show_alert=True)
+        await query.answer(text=Strings.Cart.CHECKOUT_ERROR_EMPTY, show_alert=True)
         return
 
     order = await persistence.get_order(order_id=order_id)
@@ -87,14 +88,14 @@ async def handle_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     total = order["total_amount"]
 
     # Format receipt
-    receipt_lines = ["✅ Order Placed Successfully!"]
+    receipt_lines = [Strings.Cart.RECEIPT_HEADER]
     for item in items:
         name = item["name"]
         qty = item["quantity"]
         price = item["unit_price"]
-        receipt_lines.append(f"- {name} x {qty} @ ${price:.2f}")
-    receipt_lines.append(f"<b>Total: ${total:.2f}</b>")
-    receipt_lines.append("Thank you!")
+        receipt_lines.append(Strings.Cart.receipt_item(name, qty, price))
+    receipt_lines.append(Strings.Cart.receipt_total(total))
+    receipt_lines.append(Strings.Cart.RECEIPT_FOOTER)
     receipt = "\n".join(receipt_lines)
 
     await query.edit_message_text(text=receipt, parse_mode=ParseMode.HTML)
@@ -106,13 +107,7 @@ async def handle_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         for item in items:
             item_lines.append(f"- {item['name']} x {item['quantity']}")
         items_summary = "\n".join(item_lines)
-        notification = (
-            "🔔 New Order Received!\n"
-            f"Customer: {user_id}\n"
-            f"Order ID: {order_id}\n"
-            f"{items_summary}\n"
-            f"Total: ${total:.2f}"
-        )
+        notification = Strings.Order.notification_new(user_id, order_id, items_summary, total)
         await context.bot.send_message(chat_id=owner_id, text=notification)
 
 
