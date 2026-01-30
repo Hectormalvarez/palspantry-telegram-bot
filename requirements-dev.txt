@@ -5,3 +5,5 @@ pylint
 pytest
 pytest-asyncio
 pytest-mock
+requests
+python-dotenv
