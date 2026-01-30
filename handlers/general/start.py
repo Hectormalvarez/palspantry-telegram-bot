@@ -5,6 +5,7 @@ from telegram.ext import ContextTypes
 
 from handlers.utils import schedule_deletion
 from persistence.abstract_persistence import AbstractPantryPersistence
+from resources.strings import Strings
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +30,13 @@ async def get_home_menu(persistence: AbstractPantryPersistence, user_id: int, fi
     cart_items = await persistence.get_cart_items(user_id)
 
     if cart_items:
-        text = f"Welcome back, {first_name}!\n\nYou have items in your cart."
+        text = Strings.General.welcome_returning_user(first_name)
         keyboard = [
-            [InlineKeyboardButton("🛍️ Continue Shopping", callback_data="shop_start")],
-            [InlineKeyboardButton("🛒 Checkout", callback_data="view_cart")]
+            [InlineKeyboardButton(Strings.General.CONTINUE_SHOPPING_BTN, callback_data="shop_start")],
+            [InlineKeyboardButton(Strings.General.CHECKOUT_BTN, callback_data="view_cart")]
         ]
     else:
-        text = f"Welcome, {first_name}! \n\nI am the PalsPantry Bot. I can help you browse our inventory and place orders."
-        keyboard = [[InlineKeyboardButton("🛍️ Shop Now", callback_data="shop_start")]]
+        text = Strings.General.welcome_new_user(first_name)
+        keyboard = [[InlineKeyboardButton(Strings.General.SHOP_NOW_BTN, callback_data="shop_start")]]
 
     return text, InlineKeyboardMarkup(keyboard)
