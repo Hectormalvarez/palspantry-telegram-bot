@@ -1,8 +1,8 @@
 ## 1. Active Milestone
-**Version 0.3.0: Owner Dashboard (Next)**
+**Version 0.3.0: The Owner Dashboard**
 * **Goal:** Empower the owner to view and manage incoming orders.
-* **Status:** Awaiting start of v0.3.0.
-* **Context:** The "Order Transaction Loop" (Milestone 2) and "Home Dashboard" (Milestone 2.5) are complete. String Centralization (v0.2.7) is complete. Refactoring Handler Registration (General Handlers) is complete. Refactoring Handler Registration (Customer Handlers) is complete. Refactoring Handler Registration (Owner & Product Handlers) is in progress.
+* **Status:** Pending Start
+* **Context:** The "Order Transaction Loop" (Milestone 2) and "Home Dashboard" (Milestone 2.5) are complete. String Centralization (v0.2.7) is complete. Refactoring Handler Registration (General Handlers) is complete. Refactoring Handler Registration (Customer Handlers) is complete. Refactoring Handler Registration (Owner & Product Handlers) is complete. Refactoring Handler Registration (Bot Main Cleanup) is complete.
 
 2. Recent Achievements
     (v0.2.7) Completed v0.2.7: Full Message Registry & Architecture Refactor.
@@ -10,3 +10,4 @@
     (v0.2.5) Updated "Close Shop" to navigate back to Dashboard instead of sending ephemeral messages.
     (v0.2.0) Implemented Atomic Order Creation in SQLite (`create_order`).
     (v0.2.0) Implemented Checkout flow: Cart -> Order -> Receipt -> Owner Notification.
+    (v0.3.0) Refactored `bot_main.py` to use Domain-Based Handler Registration (Scalable Architecture).

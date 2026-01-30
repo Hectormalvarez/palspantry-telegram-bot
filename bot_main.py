@@ -1,11 +1,10 @@
 import logging
 
-from telegram.ext import ApplicationBuilder, CommandHandler
+from telegram.ext import ApplicationBuilder
 
 import config
 from handlers import general, customer, owner, product
 from persistence.sqlite_persistence import SQLitePersistence
-
 
 logger = logging.getLogger(__name__)
 
