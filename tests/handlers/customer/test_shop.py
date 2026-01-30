@@ -8,6 +8,7 @@ from telegram.ext import ContextTypes
 from handlers.customer import shop
 from handlers.general.start import get_home_menu
 from persistence.abstract_persistence import AbstractPantryPersistence
+from resources.strings import Strings
 
 
 @pytest.mark.asyncio
@@ -68,7 +69,7 @@ async def test_shop_start_no_categories(
     # Assert
     mock_persistence_layer.get_all_categories.assert_called_once()
     mock_update_message.message.reply_text.assert_called_once_with(
-        "The shop is currently empty. Please check back later!"
+        Strings.Shop.EMPTY
     )
 
 
@@ -109,7 +110,7 @@ async def test_handle_category_selection_with_products(
 
     # Assert that the bot replies with buttons
     mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
-        text=f"<b>{category_name}</b>",
+        text=Strings.Shop.category_title(category_name),
         reply_markup=ANY,
         parse_mode=ParseMode.HTML,
     )
@@ -162,7 +163,7 @@ async def test_handle_category_selection_no_products(
         category_name
     )
 
-    expected_text = "No products here."
+    expected_text = Strings.Shop.NO_PRODUCTS
     mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
         expected_text
     )
@@ -231,9 +232,9 @@ async def test_handle_product_selection(
     # Assert the navigation buttons are in the second row
     nav_row = sent_markup.inline_keyboard[1]
     assert len(nav_row) == 2
-    assert nav_row[0].text == f"<< Back to {category_name}"
+    assert nav_row[0].text == Strings.Shop.back_to_category_btn(category_name)
     assert nav_row[0].callback_data == f"navigate_to_products_{category_name}"
-    assert nav_row[1].text == "❌ Close"
+    assert nav_row[1].text == Strings.Shop.CLOSE_BTN
     assert nav_row[1].callback_data == "close_shop"
 
 
@@ -266,7 +267,7 @@ async def test_handle_add_to_cart_new_item(
     # Check that the user received a confirmation pop-up
     # Remove 'text=' keyword argument as the implementation uses positional args
     mock_update_callback_query.callback_query.answer.assert_called_once_with(
-        "Croissant added to cart! (Total: 1)"
+        Strings.Shop.added_to_cart("Croissant", 1)
     )
 
 
@@ -296,7 +297,7 @@ async def test_handle_add_to_cart_existing_item(
     mock_persistence_layer.add_to_cart.assert_called_once_with(user_id=98765, product_id=product_id, quantity=1)
     # Remove 'text=' keyword argument
     mock_update_callback_query.callback_query.answer.assert_called_once_with(
-        "Croissant added to cart! (Total: 2)"
+        Strings.Shop.added_to_cart("Croissant", 2)
     )
 
 

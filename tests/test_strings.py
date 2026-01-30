@@ -6,6 +6,17 @@ from resources.strings import Strings
 def test_cart_strings():
     """Test cart-related string constants."""
     assert Strings.Cart.EMPTY == "Your cart is empty."
+    assert Strings.Cart.CLEAR_BTN == "Clear Cart"
+    assert Strings.Cart.CLEARED == "Cart cleared."
+    assert Strings.Cart.CHECKOUT_ERROR_EMPTY == "Cannot place order. Is your cart empty?"
+    assert Strings.Cart.RECEIPT_HEADER == "✅ Order Placed Successfully!"
+    assert Strings.Cart.RECEIPT_FOOTER == "Thank you!"
+
+    # Test cart methods
+    assert Strings.Cart.item_line("Apple", 2, 1.50, 3.00) == "- Apple (2 x $1.50) = $3.00"
+    assert Strings.Cart.total_line(15.75) == "Total: $15.75"
+    assert Strings.Cart.receipt_item("Banana", 3, 0.80) == "- Banana x 3 @ $0.80"
+    assert Strings.Cart.receipt_total(12.50) == "<b>Total: $12.50</b>"
 
 
 def test_general_strings():

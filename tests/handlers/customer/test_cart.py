@@ -7,6 +7,7 @@ from telegram.ext import ContextTypes
 
 from handlers.customer import cart
 from persistence.abstract_persistence import AbstractPantryPersistence
+from resources.strings import Strings
 
 
 @pytest.mark.asyncio
@@ -28,7 +29,7 @@ async def test_handle_cart_command_empty(
     # Assert
     mock_persistence_layer.get_cart_items.assert_called_once_with(user_id=98765)
     call_args = mock_update_message.message.reply_text.call_args
-    assert call_args.kwargs["text"] == "Your cart is empty."
+    assert call_args.kwargs["text"] == Strings.Cart.EMPTY
     sent_markup = call_args.kwargs["reply_markup"]
     assert isinstance(sent_markup, InlineKeyboardMarkup)
     assert len(sent_markup.inline_keyboard) == 1
@@ -58,15 +59,15 @@ async def test_handle_cart_command_with_items(
     mock_persistence_layer.get_product.assert_called_once_with("prod_1")
     call_args = mock_update_message.message.reply_text.call_args
     message_text = call_args.kwargs["text"]
-    assert "- Bread (2 x $3.00) = $6.00" in message_text
-    assert "Total: $6.00" in message_text
+    assert Strings.Cart.item_line("Bread", 2, 3.00, 6.00) in message_text
+    assert Strings.Cart.total_line(6.00) in message_text
     sent_markup = call_args.kwargs["reply_markup"]
     assert isinstance(sent_markup, InlineKeyboardMarkup)
     assert len(sent_markup.inline_keyboard) == 1
     buttons_row = sent_markup.inline_keyboard[0]
     button_texts = [btn.text for btn in buttons_row]
     assert "Checkout" in button_texts
-    assert "Clear Cart" in button_texts
+    assert Strings.Cart.CLEAR_BTN in button_texts
     assert "Continue Shopping" in button_texts
     # Find the Continue Shopping button and assert its callback_data
     continue_button = next(btn for btn in buttons_row if btn.text == "Continue Shopping")
@@ -91,7 +92,7 @@ async def test_handle_clear_cart_callback(
     # Assert
     mock_persistence_layer.clear_cart.assert_called_once_with(user_id=98765)
     mock_update_callback_query.callback_query.edit_message_text.assert_called_once_with(
-        text="Cart cleared."
+        text=Strings.Cart.CLEARED
     )
     mock_update_callback_query.callback_query.answer.assert_called_once()
 
@@ -126,16 +127,12 @@ async def test_handle_checkout_success(
     mock_persistence_layer.get_bot_owner.assert_called_once()
     call_args = mock_update_callback_query.callback_query.edit_message_text.call_args
     message_text = call_args.kwargs["text"]
-    assert "Total: $15.50" in message_text
-    assert "Burger" in message_text
+    assert Strings.Cart.receipt_total(15.50) in message_text
     mock_telegram_context.bot.send_message.assert_called_once_with(
         chat_id=12345, text=mocker.ANY
     )
     notification_text = mock_telegram_context.bot.send_message.call_args.kwargs["text"]
-    assert "New Order Received" in notification_text
-    assert "Burger" in notification_text
-    assert "Fries" in notification_text
-    assert "x 1" in notification_text
+    assert Strings.Order.notification_new(98765, "order-123", "Items:\n- Burger x 1\n- Fries x 1", 15.50) in notification_text
 
 
 @pytest.mark.asyncio
