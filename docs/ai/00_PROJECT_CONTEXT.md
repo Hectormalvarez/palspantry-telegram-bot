@@ -25,6 +25,16 @@ PalsPantry is a Python-based Telegram bot designed to be a lightweight e-commerc
     * **Centralized String Registry (Hardcoded strings currently in handlers).**
     * Owner Dashboard (Ability to list/manage orders via command).
     * Order History for customers.
+* **Transition Status:** Beginning migration to Decoupled Django/Docker Architecture (Phase 0: Infrastructure & Diagnostic Tooling).
+
+## 4. Target Architecture
+**Decoupled Django/Docker Architecture:**
+* **Bot Service:** Telegram bot as a separate service communicating with Django API.
+* **Django Backend:** Django 5.x REST API for business logic and data management.
+* **PostgreSQL 16:** Primary database for production data storage.
+* **Redis 7:** Caching layer and session management.
+* **Docker:** Containerization for consistent development and deployment environments.
+* **Service Communication:** RESTful API calls between Bot and Django services.
 
 ## 4. AI Interaction Protocol (The "Context System")
 This project uses a strict context management system to ensure continuity across chat sessions.

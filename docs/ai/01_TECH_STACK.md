@@ -5,15 +5,29 @@
 * **Framework:** `python-telegram-bot` (v20+) using `async`/`await`.
 * **Database:** SQLite (using standard `sqlite3` library).
 * **Configuration:** `python-dotenv` for secrets management.
+* **Target Stack (Phase 0+):**
+    * **Django 5.x:** REST API backend for business logic
+    * **PostgreSQL 16:** Primary production database
+    * **Redis 7:** Caching and session management
+    * **Docker:** Containerization for consistent environments
 
 ## 2. Architectural Patterns
-* **Persistence Layer:** MUST use the Repository Pattern.
-    * All DB interactions happen in `persistence/`.
-    * Handlers (`handlers/`) MUST NOT execute SQL queries directly.
-    * Handlers receive data via the `AbstractPantryPersistence` interface.
-* **State Management:**
-    * Short-term UI state (e.g., conversation steps): `context.user_data`.
-    * Long-term data (Carts, Orders, Inventory): MUST be persisted to SQLite.
+* **Current Architecture:** Monolithic Telegram bot with abstract persistence layer.
+    * **Persistence Layer:** MUST use the Repository Pattern.
+        * All DB interactions happen in `persistence/`.
+        * Handlers (`handlers/`) MUST NOT execute SQL queries directly.
+        * Handlers receive data via the `AbstractPantryPersistence` interface.
+    * **State Management:**
+        * Short-term UI state (e.g., conversation steps): `context.user_data`.
+        * Long-term data (Carts, Orders, Inventory): MUST be persisted to SQLite.
+
+* **Target Architecture (Phase 0+):** Decoupled Service-Based Model
+    * **Bot Service:** Telegram bot as independent service
+    * **Django API Service:** RESTful backend for business logic
+    * **Database Service:** PostgreSQL for persistent storage
+    * **Cache Service:** Redis for performance optimization
+    * **Service Communication:** HTTP REST API calls between services
+    * **Container Orchestration:** Docker Compose for local development
 
 ## 3. Coding Standards
 * **Formatting:** Follow `black` and `pylint` configurations present in the repo.
