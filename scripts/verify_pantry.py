@@ -7,6 +7,7 @@ import os
 import sys
 import sqlite3
 import redis
+import psycopg2
 from typing import Tuple
 
 try:
@@ -119,6 +120,45 @@ def check_redis_cache() -> Tuple[bool, str]:
         return False, f"Redis error: {str(e)}"
 
 
+def check_postgres_database() -> Tuple[bool, str]:
+    """Check PostgreSQL database connectivity and basic operations."""
+    try:
+        load_dotenv()
+        db_host = os.getenv('DB_HOST', 'localhost')
+        db_name = os.getenv('DB_NAME', 'palspantry')
+        db_user = os.getenv('DB_USER', 'postgres')
+        db_pass = os.getenv('DB_PASS', '')
+        
+        # Create PostgreSQL connection
+        conn = psycopg2.connect(
+            host=db_host,
+            database=db_name,
+            user=db_user,
+            password=db_pass
+        )
+        
+        # Test connection with SELECT 1
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1;')
+        result = cursor.fetchone()
+        
+        # Close connections
+        cursor.close()
+        conn.close()
+        
+        if result and result[0] == 1:
+            return True, "PostgreSQL connection successful"
+        else:
+            return False, "PostgreSQL SELECT 1 test failed"
+            
+    except psycopg2.OperationalError as e:
+        return False, f"PostgreSQL connection failed: {str(e)}"
+    except psycopg2.Error as e:
+        return False, f"PostgreSQL error: {str(e)}"
+    except Exception as e:
+        return False, f"Unexpected PostgreSQL error: {str(e)}"
+
+
 def main():
     """Main verification function."""
     print("PalPantry Bot Verification")
@@ -159,8 +199,13 @@ def main():
     redis_status = "PASS" if redis_ok else "FAIL"
     print(f"[REDIS] Redis Cache: {redis_status} ({redis_msg})")
     
-    # Exit with code 1 if Redis check fails
-    if not redis_ok:
+    # Check 5: PostgreSQL Database
+    pg_ok, pg_msg = check_postgres_database()
+    pg_status = "PASS" if pg_ok else "FAIL"
+    print(f"[PG]    Postgres DB: {pg_status} ({pg_msg})")
+    
+    # Exit with code 1 if any check fails
+    if not redis_ok or not pg_ok:
         sys.exit(1)
     
     print("\nAll checks passed! ✅")
