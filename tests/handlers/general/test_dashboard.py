@@ -17,8 +17,12 @@ async def test_get_home_menu_empty_cart(mock_persistence_layer):
 
     # Assert
     assert "Welcome" in text
-    assert any("Shop Now" in button.text for row in keyboard.inline_keyboard for button in row)
-    assert not any("Checkout" in button.text for row in keyboard.inline_keyboard for button in row)
+    assert any(
+        "Shop Now" in button.text for row in keyboard.inline_keyboard for button in row
+    )
+    assert not any(
+        "Checkout" in button.text for row in keyboard.inline_keyboard for button in row
+    )
 
 
 @pytest.mark.asyncio
@@ -35,6 +39,16 @@ async def test_get_home_menu_active_cart(mock_persistence_layer):
     # Assert
     assert "Welcome" in text
     assert "You have items in your cart" in text
-    assert any("Continue Shopping" in button.text for row in keyboard.inline_keyboard for button in row)
-    assert any("Checkout" in button.text for row in keyboard.inline_keyboard for button in row)
-    assert any(button.callback_data == "view_cart" for row in keyboard.inline_keyboard for button in row)
+    assert any(
+        "Continue Shopping" in button.text
+        for row in keyboard.inline_keyboard
+        for button in row
+    )
+    assert any(
+        "Checkout" in button.text for row in keyboard.inline_keyboard for button in row
+    )
+    assert any(
+        button.callback_data == "view_cart"
+        for row in keyboard.inline_keyboard
+        for button in row
+    )

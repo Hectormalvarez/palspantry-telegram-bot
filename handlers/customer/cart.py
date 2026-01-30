@@ -8,11 +8,12 @@ from handlers.utils import schedule_deletion
 from persistence.abstract_persistence import AbstractPantryPersistence
 from resources.strings import Strings
 
-
 logger = logging.getLogger(__name__)
 
 
-async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_cart_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handles the /cart command to display the user's cart."""
     user_id = update.effective_user.id
     persistence: AbstractPantryPersistence = context.bot_data["persistence"]
@@ -22,7 +23,14 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not cart_items:
         # Empty cart
         text = Strings.Cart.EMPTY
-        keyboard = [[InlineKeyboardButton(Strings.General.CONTINUE_SHOPPING_BTN, callback_data="navigate_to_categories")]]
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    Strings.General.CONTINUE_SHOPPING_BTN,
+                    callback_data="navigate_to_categories",
+                )
+            ]
+        ]
     else:
         # Cart has items
         total = 0.0
@@ -34,7 +42,9 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
                 price = product["price"]
                 item_total = quantity * price
                 total += item_total
-                message_lines.append(Strings.Cart.item_line(name, quantity, price, item_total))
+                message_lines.append(
+                    Strings.Cart.item_line(name, quantity, price, item_total)
+                )
             else:
                 # Product not found, perhaps skip or handle
                 pass
@@ -44,9 +54,16 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         keyboard = [
             [
-                InlineKeyboardButton(Strings.General.CHECKOUT_BTN, callback_data="cart_checkout"),
-                InlineKeyboardButton(Strings.Cart.CLEAR_BTN, callback_data="clear_cart"),
-                InlineKeyboardButton(Strings.General.CONTINUE_SHOPPING_BTN, callback_data="navigate_to_categories"),
+                InlineKeyboardButton(
+                    Strings.General.CHECKOUT_BTN, callback_data="cart_checkout"
+                ),
+                InlineKeyboardButton(
+                    Strings.Cart.CLEAR_BTN, callback_data="clear_cart"
+                ),
+                InlineKeyboardButton(
+                    Strings.General.CONTINUE_SHOPPING_BTN,
+                    callback_data="navigate_to_categories",
+                ),
             ]
         ]
 
@@ -54,7 +71,9 @@ async def handle_cart_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     if update.callback_query:
         await update.callback_query.answer()
-        await update.callback_query.edit_message_text(text=text, reply_markup=reply_markup)
+        await update.callback_query.edit_message_text(
+            text=text, reply_markup=reply_markup
+        )
     else:
         await update.message.reply_text(text=text, reply_markup=reply_markup)
         schedule_deletion(context, update.effective_chat.id, update.message.message_id)
@@ -107,7 +126,9 @@ async def handle_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         for item in items:
             item_lines.append(f"- {item['name']} x {item['quantity']}")
         items_summary = "\n".join(item_lines)
-        notification = Strings.Order.notification_new(user_id, order_id, items_summary, total)
+        notification = Strings.Order.notification_new(
+            user_id, order_id, items_summary, total
+        )
         await context.bot.send_message(chat_id=owner_id, text=notification)
 
 

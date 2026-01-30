@@ -363,7 +363,8 @@ async def test_received_product_quantity_invalid_inputs(
 @pytest.mark.asyncio
 async def test_cancel_add_product_with_data(
     mocker,
-    mock_update_message: Update, mock_telegram_context: ContextTypes.DEFAULT_TYPE
+    mock_update_message: Update,
+    mock_telegram_context: ContextTypes.DEFAULT_TYPE,
 ):
     """Test cancelling the conversation when some data exists."""
     mock_telegram_context.user_data = {"new_product": {"name": "Test"}}

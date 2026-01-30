@@ -35,7 +35,9 @@ class Strings:
 
     class Owner:
         SET_SUCCESS = "You are now the owner of this bot."
-        SET_FAILED = "Could not set owner at this time. An owner might already be registered."
+        SET_FAILED = (
+            "Could not set owner at this time. An owner might already be registered."
+        )
         ALREADY_SET = "An owner has already been set."
         NOT_OWNER = "Sorry, this command is only for the bot owner."
 
@@ -44,30 +46,46 @@ class Strings:
         START_ADD = "Let's add a new product! First, what is the product's name?"
         ASK_DESCRIPTION = "Name set to '{name}'.\n\nNow, please enter a description."
         ASK_PRICE = "Description noted.\n\nNow, what's the price? (e.g., 10.99 or 5)"
-        ASK_QUANTITY = "Price set to ${price:.2f}.\n\nHow many units are available? (e.g., 10)"
-        ASK_CATEGORY = "Quantity set to {qty}.\n\nNow, please specify a category (e.g. 'Dairy')."
+        ASK_QUANTITY = (
+            "Price set to ${price:.2f}.\n\nHow many units are available? (e.g., 10)"
+        )
+        ASK_CATEGORY = (
+            "Quantity set to {qty}.\n\nNow, please specify a category (e.g. 'Dairy')."
+        )
         ASK_IMAGE = "Category set.\n\nFinally, please send a photo of the product.\nOr type /skip if you don't want to add an image."
         NO_IMAGE_ADDED = "No image added."
-        
+
         # Errors & Validation
-        ERR_EMPTY_NAME = "Product name cannot be empty. Please enter a name, or /cancel."
-        ERR_EMPTY_DESC = "Description cannot be empty. Please enter a description, or /cancel."
-        ERR_INVALID_PRICE = "Invalid price. Please enter a positive number (e.g. 10.99), or /cancel."
-        ERR_INVALID_QTY = "Invalid quantity. Please enter a whole positive number, or /cancel."
-        ERR_EMPTY_CATEGORY = "Category cannot be empty. Please enter a category, or /cancel."
+        ERR_EMPTY_NAME = (
+            "Product name cannot be empty. Please enter a name, or /cancel."
+        )
+        ERR_EMPTY_DESC = (
+            "Description cannot be empty. Please enter a description, or /cancel."
+        )
+        ERR_INVALID_PRICE = (
+            "Invalid price. Please enter a positive number (e.g. 10.99), or /cancel."
+        )
+        ERR_INVALID_QTY = (
+            "Invalid quantity. Please enter a whole positive number, or /cancel."
+        )
+        ERR_EMPTY_CATEGORY = (
+            "Category cannot be empty. Please enter a category, or /cancel."
+        )
         ERR_DATA_LOST = "Error: Data lost. Please try again."
         ERR_DB_SAVE = "❌ Database error. Could not save."
-        
+
         # Results
         CANCELLED = "Product addition cancelled."
         SUCCESS_ADDED = "✅ Product '{name}' added!"
-        
+
         # Buttons
         BTN_CONFIRM = "✅ Confirm & Save"
         BTN_CANCEL = "❌ Cancel"
 
         @staticmethod
-        def confirm_summary(name: str, desc: str, price: float, qty: int, cat: str, has_image: bool) -> str:
+        def confirm_summary(
+            name: str, desc: str, price: float, qty: int, cat: str, has_image: bool
+        ) -> str:
             return (
                 "<b>Confirm New Product:</b>\n\n"
                 f"<b>Name:</b> {name}\n"
@@ -86,7 +104,7 @@ class Strings:
         PRODUCT_NOT_FOUND = "Product not found."
         PRODUCT_UNAVAILABLE = "Product no longer available."
         ADD_ERROR = "Error adding to cart. Please try again."
-        
+
         CLOSE_BTN = "❌ Close"
         BACK_TO_CATEGORIES_BTN = "<< Back to Categories"
         ADD_TO_CART_BTN = "🛒 Add to Cart"
@@ -123,7 +141,7 @@ class Strings:
         CHECKOUT_ERROR_EMPTY = "Cannot place order. Is your cart empty?"
         RECEIPT_HEADER = "✅ Order Placed Successfully!"
         RECEIPT_FOOTER = "Thank you!"
-        
+
         @staticmethod
         def item_line(name: str, qty: int, price: float, total: float) -> str:
             return f"- {name} ({qty} x ${price:.2f}) = ${total:.2f}"
@@ -131,18 +149,20 @@ class Strings:
         @staticmethod
         def total_line(total: float) -> str:
             return f"Total: ${total:.2f}"
-            
+
         @staticmethod
         def receipt_item(name: str, qty: int, price: float) -> str:
             return f"- {name} x {qty} @ ${price:.2f}"
-            
+
         @staticmethod
         def receipt_total(total: float) -> str:
             return f"<b>Total: ${total:.2f}</b>"
 
     class Order:
         @staticmethod
-        def notification_new(user_id: int, order_id: str, items_summary: str, total: float) -> str:
+        def notification_new(
+            user_id: int, order_id: str, items_summary: str, total: float
+        ) -> str:
             return (
                 "🔔 New Order Received!\n"
                 f"Customer: {user_id}\n"

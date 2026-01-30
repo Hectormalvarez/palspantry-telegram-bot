@@ -132,8 +132,7 @@ class SQLitePersistence(AbstractPantryPersistence):
         conn = self._get_connection()
         try:
             with conn:
-                conn.executescript(
-                    """
+                conn.executescript("""
                     CREATE TABLE IF NOT EXISTS system_config (
                         key TEXT PRIMARY KEY,
                         value TEXT
@@ -181,8 +180,7 @@ class SQLitePersistence(AbstractPantryPersistence):
                         FOREIGN KEY(order_id) REFERENCES orders(id),
                         FOREIGN KEY(product_id) REFERENCES products(id)
                     );
-                """
-                )
+                """)
         finally:
             conn.close()
 
@@ -415,7 +413,9 @@ class SQLitePersistence(AbstractPantryPersistence):
 
     # --- Cart Management ---
 
-    async def add_to_cart(self, user_id: int, product_id: str, quantity: int) -> Optional[int]:
+    async def add_to_cart(
+        self, user_id: int, product_id: str, quantity: int
+    ) -> Optional[int]:
         """
         Adds a product to the user's cart.
 
@@ -571,16 +571,17 @@ class SQLitePersistence(AbstractPantryPersistence):
             JOIN products p ON oi.product_id = p.id
             WHERE oi.order_id = ?
             """,
-            (order_id,)
+            (order_id,),
         )
 
         # Format items
         items = [
-            {"name": row["name"], "quantity": row["quantity"], "unit_price": row["unit_price"]}
+            {
+                "name": row["name"],
+                "quantity": row["quantity"],
+                "unit_price": row["unit_price"],
+            }
             for row in items_rows
         ]
 
-        return {
-            "total_amount": order_row["total_amount"],
-            "items": items
-        }
+        return {"total_amount": order_row["total_amount"], "items": items}

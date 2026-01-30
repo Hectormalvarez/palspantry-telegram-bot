@@ -40,12 +40,17 @@ async def test_start_command(
     shop_button_found = False
     for row in keyboard:
         for button in row:
-            if button.text == Strings.General.SHOP_NOW_BTN and button.callback_data == "shop_start":
+            if (
+                button.text == Strings.General.SHOP_NOW_BTN
+                and button.callback_data == "shop_start"
+            ):
                 shop_button_found = True
                 break
         if shop_button_found:
             break
-    assert shop_button_found, "Shop Now button with callback_data 'shop_start' not found"
+    assert (
+        shop_button_found
+    ), "Shop Now button with callback_data 'shop_start' not found"
 
     assert mock_telegram_context.job_queue.run_once.call_count >= 1
 
@@ -60,29 +65,36 @@ async def test_get_home_menu_empty_cart(
     """Test get_home_menu with empty cart."""
     # Arrange
     from handlers.general.start import get_home_menu
-    
+
     mock_persistence_layer.get_cart_items.return_value = {}
     user_id = 123
     first_name = "Alice"
 
     # Act
-    text, reply_markup = await get_home_menu(mock_persistence_layer, user_id, first_name)
+    text, reply_markup = await get_home_menu(
+        mock_persistence_layer, user_id, first_name
+    )
 
     # Assert
     assert text == Strings.General.welcome_new_user("Alice")
-    
+
     # Check reply_markup
     assert isinstance(reply_markup, InlineKeyboardMarkup)
     keyboard = reply_markup.inline_keyboard
     shop_button_found = False
     for row in keyboard:
         for button in row:
-            if button.text == Strings.General.SHOP_NOW_BTN and button.callback_data == "shop_start":
+            if (
+                button.text == Strings.General.SHOP_NOW_BTN
+                and button.callback_data == "shop_start"
+            ):
                 shop_button_found = True
                 break
         if shop_button_found:
             break
-    assert shop_button_found, "Shop Now button with callback_data 'shop_start' not found"
+    assert (
+        shop_button_found
+    ), "Shop Now button with callback_data 'shop_start' not found"
 
 
 @pytest.mark.asyncio
@@ -95,31 +107,39 @@ async def test_get_home_menu_active_cart(
     """Test get_home_menu with active cart."""
     # Arrange
     from handlers.general.start import get_home_menu
-    
+
     mock_persistence_layer.get_cart_items.return_value = {"item1": 2}
     user_id = 123
     first_name = "Alice"
 
     # Act
-    text, reply_markup = await get_home_menu(mock_persistence_layer, user_id, first_name)
+    text, reply_markup = await get_home_menu(
+        mock_persistence_layer, user_id, first_name
+    )
 
     # Assert
     assert text == Strings.General.welcome_returning_user("Alice")
-    
+
     # Check reply_markup
     assert isinstance(reply_markup, InlineKeyboardMarkup)
     keyboard = reply_markup.inline_keyboard
-    
+
     # Should have Continue Shopping and Checkout buttons
     continue_shopping_found = False
     checkout_found = False
-    
+
     for row in keyboard:
         for button in row:
-            if button.text == Strings.General.CONTINUE_SHOPPING_BTN and button.callback_data == "shop_start":
+            if (
+                button.text == Strings.General.CONTINUE_SHOPPING_BTN
+                and button.callback_data == "shop_start"
+            ):
                 continue_shopping_found = True
-            if button.text == Strings.General.CHECKOUT_BTN and button.callback_data == "view_cart":
+            if (
+                button.text == Strings.General.CHECKOUT_BTN
+                and button.callback_data == "view_cart"
+            ):
                 checkout_found = True
-    
+
     assert continue_shopping_found, "Continue Shopping button not found"
     assert checkout_found, "Checkout button not found"

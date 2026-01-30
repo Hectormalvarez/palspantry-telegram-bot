@@ -10,7 +10,6 @@ from telegram.ext import ContextTypes
 from persistence.abstract_persistence import AbstractPantryPersistence
 from persistence.sqlite_persistence import SQLitePersistence
 
-
 # --- Integration Test Fixtures ---
 
 

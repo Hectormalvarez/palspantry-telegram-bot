@@ -22,21 +22,39 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await update.message.reply_text(text, reply_markup=reply_markup)
 
     if update.message:
-        schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
+        schedule_deletion(
+            context, update.effective_chat.id, update.message.message_id, delay=3.0
+        )
 
 
-async def get_home_menu(persistence: AbstractPantryPersistence, user_id: int, first_name: str):
+async def get_home_menu(
+    persistence: AbstractPantryPersistence, user_id: int, first_name: str
+):
     """Get the home menu for the user based on their cart status."""
     cart_items = await persistence.get_cart_items(user_id)
 
     if cart_items:
         text = Strings.General.welcome_returning_user(first_name)
         keyboard = [
-            [InlineKeyboardButton(Strings.General.CONTINUE_SHOPPING_BTN, callback_data="shop_start")],
-            [InlineKeyboardButton(Strings.General.CHECKOUT_BTN, callback_data="view_cart")]
+            [
+                InlineKeyboardButton(
+                    Strings.General.CONTINUE_SHOPPING_BTN, callback_data="shop_start"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    Strings.General.CHECKOUT_BTN, callback_data="view_cart"
+                )
+            ],
         ]
     else:
         text = Strings.General.welcome_new_user(first_name)
-        keyboard = [[InlineKeyboardButton(Strings.General.SHOP_NOW_BTN, callback_data="shop_start")]]
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    Strings.General.SHOP_NOW_BTN, callback_data="shop_start"
+                )
+            ]
+        ]
 
     return text, InlineKeyboardMarkup(keyboard)

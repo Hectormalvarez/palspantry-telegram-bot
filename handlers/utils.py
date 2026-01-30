@@ -18,7 +18,12 @@ async def _delete_msg_job(context: ContextTypes.DEFAULT_TYPE):
         logging.getLogger(__name__).debug(f"Cleanup failed: {e}")
 
 
-def schedule_deletion(context: ContextTypes.DEFAULT_TYPE, chat_id: int, message_id: int, delay: float = 3.0):
+def schedule_deletion(
+    context: ContextTypes.DEFAULT_TYPE,
+    chat_id: int,
+    message_id: int,
+    delay: float = 3.0,
+):
     """
     Schedules a message to be deleted after `delay` seconds.
     Safe to call even if job_queue is None (no-op).

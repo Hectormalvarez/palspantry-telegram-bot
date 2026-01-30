@@ -68,9 +68,7 @@ async def test_shop_start_no_categories(
 
     # Assert
     mock_persistence_layer.get_all_categories.assert_called_once()
-    mock_update_message.message.reply_text.assert_called_once_with(
-        Strings.Shop.EMPTY
-    )
+    mock_update_message.message.reply_text.assert_called_once_with(Strings.Shop.EMPTY)
 
 
 @pytest.mark.asyncio
@@ -263,7 +261,9 @@ async def test_handle_add_to_cart_new_item(
     await shop.handle_add_to_cart(mock_update_callback_query, mock_telegram_context)
 
     # Assert
-    mock_persistence_layer.add_to_cart.assert_called_once_with(user_id=98765, product_id=product_id, quantity=1)
+    mock_persistence_layer.add_to_cart.assert_called_once_with(
+        user_id=98765, product_id=product_id, quantity=1
+    )
     # Check that the user received a confirmation pop-up
     # Remove 'text=' keyword argument as the implementation uses positional args
     mock_update_callback_query.callback_query.answer.assert_called_once_with(
@@ -294,7 +294,9 @@ async def test_handle_add_to_cart_existing_item(
     await shop.handle_add_to_cart(mock_update_callback_query, mock_telegram_context)
 
     # Assert
-    mock_persistence_layer.add_to_cart.assert_called_once_with(user_id=98765, product_id=product_id, quantity=1)
+    mock_persistence_layer.add_to_cart.assert_called_once_with(
+        user_id=98765, product_id=product_id, quantity=1
+    )
     # Remove 'text=' keyword argument
     mock_update_callback_query.callback_query.answer.assert_called_once_with(
         Strings.Shop.added_to_cart("Croissant", 2)
@@ -314,7 +316,9 @@ async def test_handle_close_shop(
     query.data = "close_shop"
     mock_update_callback_query.effective_user.first_name = "TestUser"
     mock_telegram_context.bot_data["persistence"] = mock_persistence_layer
-    mock_keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Mock", callback_data="mock")]])
+    mock_keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Mock", callback_data="mock")]]
+    )
     mock_get_home_menu = mocker.patch("handlers.customer.shop.get_home_menu")
     mock_get_home_menu.return_value = ("Mock Dashboard", mock_keyboard)
 
@@ -323,8 +327,12 @@ async def test_handle_close_shop(
 
     # Assert
     query.answer.assert_called_once()
-    mock_get_home_menu.assert_called_once_with(mock_persistence_layer, 98765, "TestUser")
-    query.edit_message_text.assert_called_once_with(text="Mock Dashboard", reply_markup=mock_keyboard)
+    mock_get_home_menu.assert_called_once_with(
+        mock_persistence_layer, 98765, "TestUser"
+    )
+    query.edit_message_text.assert_called_once_with(
+        text="Mock Dashboard", reply_markup=mock_keyboard
+    )
 
 
 @pytest.mark.asyncio

@@ -9,7 +9,6 @@ from handlers.utils import schedule_deletion
 from handlers.general.start import get_home_menu
 from resources.strings import Strings
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -31,7 +30,9 @@ async def shop_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await _send_category_menu(update, context, send_new=not is_callback)
 
     if update.message:
-        schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
+        schedule_deletion(
+            context, update.effective_chat.id, update.message.message_id, delay=3.0
+        )
 
 
 async def _send_category_menu(
@@ -58,7 +59,9 @@ async def _send_category_menu(
         keyboard.append(
             [InlineKeyboardButton(category, callback_data=f"category_{category}")]
         )
-    keyboard.append([InlineKeyboardButton(Strings.Shop.CLOSE_BTN, callback_data="close_shop")])
+    keyboard.append(
+        [InlineKeyboardButton(Strings.Shop.CLOSE_BTN, callback_data="close_shop")]
+    )
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     text = Strings.Shop.CATEGORY_HEADER
@@ -112,7 +115,7 @@ async def _send_product_list(
 
     keyboard = []
     for product in products:
-        button_text = Strings.Shop.product_button(product['name'], product['price'])
+        button_text = Strings.Shop.product_button(product["name"], product["price"])
         keyboard.append(
             [
                 InlineKeyboardButton(
@@ -125,7 +128,8 @@ async def _send_product_list(
     keyboard.append(
         [
             InlineKeyboardButton(
-                Strings.Shop.BACK_TO_CATEGORIES_BTN, callback_data="navigate_to_categories"
+                Strings.Shop.BACK_TO_CATEGORIES_BTN,
+                callback_data="navigate_to_categories",
             ),
             InlineKeyboardButton(Strings.Shop.CLOSE_BTN, callback_data="close_shop"),
         ]
@@ -161,10 +165,10 @@ async def handle_product_selection(
 
     # Prepare Content
     caption = Strings.Shop.product_caption(
-        product['name'],
-        product.get('description', ''),
-        product['price'],
-        product['quantity']
+        product["name"],
+        product.get("description", ""),
+        product["price"],
+        product["quantity"],
     )
 
     category = product.get("category", "Products")
@@ -223,10 +227,12 @@ async def handle_add_to_cart(
         return
 
     user_id = update.effective_user.id
-    new_quantity = await persistence.add_to_cart(user_id=user_id, product_id=product_id, quantity=1)
+    new_quantity = await persistence.add_to_cart(
+        user_id=user_id, product_id=product_id, quantity=1
+    )
 
     if new_quantity:
-        await query.answer(Strings.Shop.added_to_cart(product['name'], new_quantity))
+        await query.answer(Strings.Shop.added_to_cart(product["name"], new_quantity))
     else:
         await query.answer(Strings.Shop.ADD_ERROR, show_alert=True)
 
@@ -244,9 +250,7 @@ async def handle_close_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if query.message.photo:
         await query.message.delete()
         await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=text,
-            reply_markup=reply_markup
+            chat_id=update.effective_chat.id, text=text, reply_markup=reply_markup
         )
     else:
         await query.edit_message_text(text=text, reply_markup=reply_markup)

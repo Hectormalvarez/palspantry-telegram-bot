@@ -15,7 +15,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             int | None: The user ID of the bot owner, or None if not set.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def set_bot_owner(self, user_id: int) -> bool:
@@ -30,7 +30,7 @@ class AbstractPantryPersistence(ABC):
             bool: True if the owner was successfully set (e.g., was not previously set),
                   False otherwise (e.g., if an owner was already set).
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def is_owner_set(self) -> bool:
@@ -40,7 +40,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             bool: True if an owner is set, False otherwise.
         """
-        pass
+        raise NotImplementedError
 
     # --- Product Management Methods ---
     @abstractmethod
@@ -57,7 +57,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             str | None: The ID of the newly created product, or None if failed.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def get_product(self, product_id: str) -> dict[str, Any] | None:
@@ -70,7 +70,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             dict[str, Any] | None: The product data, or None if not found.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def get_all_products(self) -> list[dict[str, Any]]:
@@ -80,7 +80,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             list[dict[str, Any]]: A list of all products.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def get_products_by_category(
@@ -95,7 +95,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             list[dict[str, Any]]: A list of products in that category.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def get_all_categories(self) -> list[str]:
@@ -105,7 +105,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             list[str]: A list of unique category names.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def update_product(
@@ -121,7 +121,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             bool: True if update was successful, False otherwise.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def delete_product(self, product_id: str) -> bool:
@@ -134,7 +134,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             bool: True if deletion was successful, False otherwise.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def update_product_stock(
@@ -151,11 +151,13 @@ class AbstractPantryPersistence(ABC):
         Returns:
             int | None: The new stock quantity if successful, None otherwise.
         """
-        pass
+        raise NotImplementedError
 
     # --- Cart Management Methods ---
     @abstractmethod
-    async def add_to_cart(self, user_id: int, product_id: str, quantity: int) -> Optional[int]:
+    async def add_to_cart(
+        self, user_id: int, product_id: str, quantity: int
+    ) -> Optional[int]:
         """
         Adds a product to the user's cart.
 
@@ -167,7 +169,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             Optional[int]: The new quantity on success, or None on failure.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def get_cart_items(self, user_id: int) -> dict[str, int]:
@@ -180,7 +182,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             dict[str, int]: A dictionary mapping product IDs to quantities.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def clear_cart(self, user_id: int) -> bool:
@@ -193,7 +195,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             bool: True if the cart was successfully cleared, False otherwise.
         """
-        pass
+        raise NotImplementedError
 
     # --- Order Management Methods ---
     @abstractmethod
@@ -202,7 +204,7 @@ class AbstractPantryPersistence(ABC):
         Creates an order from the user's current cart. Returns the Order ID (UUID) if successful,
         or None if the cart is empty or stock is insufficient.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def get_order(self, order_id: str) -> Optional[dict[str, Any]]:
@@ -215,7 +217,7 @@ class AbstractPantryPersistence(ABC):
         Returns:
             Optional[dict[str, Any]]: The order data, or None if not found.
         """
-        pass
+        raise NotImplementedError
 
     # @abstractmethod
     # async def update_order_status(self, order_id: str, new_status: str) -> bool:

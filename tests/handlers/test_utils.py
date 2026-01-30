@@ -22,4 +22,4 @@ def test_schedule_deletion():
     assert call_args[0][1] == 3.0
 
     # 6. Asserts that the `data` keyword argument is `(123, 456)`.
-    assert call_args[1]['data'] == (123, 456)
+    assert call_args[1]["data"] == (123, 456)

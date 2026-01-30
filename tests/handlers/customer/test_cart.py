@@ -33,7 +33,9 @@ async def test_handle_cart_command_empty(
     sent_markup = call_args.kwargs["reply_markup"]
     assert isinstance(sent_markup, InlineKeyboardMarkup)
     assert len(sent_markup.inline_keyboard) == 1
-    assert sent_markup.inline_keyboard[0][0].text == Strings.General.CONTINUE_SHOPPING_BTN
+    assert (
+        sent_markup.inline_keyboard[0][0].text == Strings.General.CONTINUE_SHOPPING_BTN
+    )
     assert sent_markup.inline_keyboard[0][0].callback_data == "navigate_to_categories"
 
 
@@ -70,7 +72,9 @@ async def test_handle_cart_command_with_items(
     assert Strings.Cart.CLEAR_BTN in button_texts
     assert Strings.General.CONTINUE_SHOPPING_BTN in button_texts
     # Find the Continue Shopping button and assert its callback_data
-    continue_button = next(btn for btn in buttons_row if btn.text == Strings.General.CONTINUE_SHOPPING_BTN)
+    continue_button = next(
+        btn for btn in buttons_row if btn.text == Strings.General.CONTINUE_SHOPPING_BTN
+    )
     assert continue_button.callback_data == "navigate_to_categories"
 
 
@@ -113,8 +117,8 @@ async def test_handle_checkout_success(
         "total_amount": 15.50,
         "items": [
             {"name": "Burger", "quantity": 1, "unit_price": 10.00},
-            {"name": "Fries", "quantity": 1, "unit_price": 5.50}
-        ]
+            {"name": "Fries", "quantity": 1, "unit_price": 5.50},
+        ],
     }
     mock_persistence_layer.get_bot_owner.return_value = 12345
 
@@ -132,7 +136,12 @@ async def test_handle_checkout_success(
         chat_id=12345, text=mocker.ANY
     )
     notification_text = mock_telegram_context.bot.send_message.call_args.kwargs["text"]
-    assert Strings.Order.notification_new(98765, "order-123", "Items:\n- Burger x 1\n- Fries x 1", 15.50) in notification_text
+    assert (
+        Strings.Order.notification_new(
+            98765, "order-123", "Items:\n- Burger x 1\n- Fries x 1", 15.50
+        )
+        in notification_text
+    )
 
 
 @pytest.mark.asyncio

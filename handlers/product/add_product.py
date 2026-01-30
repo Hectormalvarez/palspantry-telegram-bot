@@ -43,12 +43,12 @@ async def add_product_start(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     context.user_data["new_product"] = {}
 
     if update.message:
-        schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
+        schedule_deletion(
+            context, update.effective_chat.id, update.message.message_id, delay=3.0
+        )
 
     # FIX: Use effective_message to prevent NoneType errors on edge cases
-    sent_message = await update.effective_message.reply_text(
-        Strings.Product.START_ADD
-    )
+    sent_message = await update.effective_message.reply_text(Strings.Product.START_ADD)
     context.user_data["last_bot_msg_id"] = sent_message.message_id
     return PRODUCT_NAME
 
@@ -56,12 +56,12 @@ async def add_product_start(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def received_product_name(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
+    schedule_deletion(
+        context, update.effective_chat.id, update.message.message_id, delay=3.0
+    )
     product_name = update.message.text
     if not product_name or not product_name.strip():
-        await update.message.reply_text(
-            Strings.Product.ERR_EMPTY_NAME
-        )
+        await update.message.reply_text(Strings.Product.ERR_EMPTY_NAME)
         return PRODUCT_NAME
 
     context.user_data["new_product"]["name"] = product_name.strip()
@@ -85,12 +85,12 @@ async def received_product_name(
 async def received_product_description(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
+    schedule_deletion(
+        context, update.effective_chat.id, update.message.message_id, delay=3.0
+    )
     desc = update.message.text
     if not desc or not desc.strip():
-        await update.message.reply_text(
-            Strings.Product.ERR_EMPTY_DESC
-        )
+        await update.message.reply_text(Strings.Product.ERR_EMPTY_DESC)
         return PRODUCT_DESCRIPTION
 
     context.user_data["new_product"]["description"] = desc.strip()
@@ -111,7 +111,9 @@ async def received_product_description(
 async def received_product_price(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
+    schedule_deletion(
+        context, update.effective_chat.id, update.message.message_id, delay=3.0
+    )
     price_text = update.message.text
     try:
         price = float(price_text)
@@ -131,16 +133,16 @@ async def received_product_price(
 
         return PRODUCT_QUANTITY
     except ValueError:
-        await update.message.reply_text(
-            Strings.Product.ERR_INVALID_PRICE
-        )
+        await update.message.reply_text(Strings.Product.ERR_INVALID_PRICE)
         return PRODUCT_PRICE
 
 
 async def received_product_quantity(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
+    schedule_deletion(
+        context, update.effective_chat.id, update.message.message_id, delay=3.0
+    )
     qty_text = update.message.text
     try:
         qty = int(qty_text)
@@ -160,21 +162,19 @@ async def received_product_quantity(
 
         return PRODUCT_CATEGORY
     except ValueError:
-        await update.message.reply_text(
-            Strings.Product.ERR_INVALID_QTY
-        )
+        await update.message.reply_text(Strings.Product.ERR_INVALID_QTY)
         return PRODUCT_QUANTITY
 
 
 async def received_product_category(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
+    schedule_deletion(
+        context, update.effective_chat.id, update.message.message_id, delay=3.0
+    )
     cat = update.message.text
     if not cat or not cat.strip():
-        await update.message.reply_text(
-            Strings.Product.ERR_EMPTY_CATEGORY
-        )
+        await update.message.reply_text(Strings.Product.ERR_EMPTY_CATEGORY)
         return PRODUCT_CATEGORY
 
     context.user_data["new_product"]["category"] = cat.strip()
@@ -197,7 +197,9 @@ async def received_product_category(
 async def received_product_image(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
+    schedule_deletion(
+        context, update.effective_chat.id, update.message.message_id, delay=3.0
+    )
     """Stores the file_id of the largest available photo size."""
     photo_file = update.message.photo[-1]  # Get the largest size
     context.user_data["new_product"]["image_file_id"] = photo_file.file_id
@@ -211,7 +213,9 @@ async def received_product_image(
 
 
 async def skip_product_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    schedule_deletion(context, update.effective_chat.id, update.message.message_id, delay=3.0)
+    schedule_deletion(
+        context, update.effective_chat.id, update.message.message_id, delay=3.0
+    )
     """Sets image_file_id to None and proceeds."""
     context.user_data["new_product"]["image_file_id"] = None
 
@@ -235,12 +239,12 @@ async def _send_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE)
     p = context.user_data["new_product"]
 
     summary = Strings.Product.confirm_summary(
-        name=p.get('name'),
-        desc=p.get('description'),
-        price=p.get('price'),
-        qty=p.get('quantity'),
-        cat=p.get('category'),
-        has_image=bool(p.get('image_file_id'))
+        name=p.get("name"),
+        desc=p.get("description"),
+        price=p.get("price"),
+        qty=p.get("quantity"),
+        cat=p.get("category"),
+        has_image=bool(p.get("image_file_id")),
     )
 
     keyboard = [
@@ -248,7 +252,9 @@ async def _send_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE)
             InlineKeyboardButton(
                 Strings.Product.BTN_CONFIRM, callback_data="product_confirm_save"
             ),
-            InlineKeyboardButton(Strings.Product.BTN_CANCEL, callback_data="product_confirm_cancel"),
+            InlineKeyboardButton(
+                Strings.Product.BTN_CANCEL, callback_data="product_confirm_cancel"
+            ),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -274,11 +280,17 @@ async def handle_product_save_confirmed(
     product_id = await persistence.add_product(product_data)
 
     if product_id:
-        await query.edit_message_text(Strings.Product.SUCCESS_ADDED.format(name=product_data['name']))
-        schedule_deletion(context, update.effective_chat.id, query.message.message_id, delay=5.0)
+        await query.edit_message_text(
+            Strings.Product.SUCCESS_ADDED.format(name=product_data["name"])
+        )
+        schedule_deletion(
+            context, update.effective_chat.id, query.message.message_id, delay=5.0
+        )
     else:
         await query.edit_message_text(Strings.Product.ERR_DB_SAVE)
-        schedule_deletion(context, update.effective_chat.id, query.message.message_id, delay=5.0)
+        schedule_deletion(
+            context, update.effective_chat.id, query.message.message_id, delay=5.0
+        )
 
     context.user_data.pop("new_product", None)
     return ConversationHandler.END
@@ -292,7 +304,12 @@ async def cancel_add_product(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if update.callback_query:
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(Strings.Product.CANCELLED)
-        schedule_deletion(context, update.effective_chat.id, update.callback_query.message.message_id, delay=5.0)
+        schedule_deletion(
+            context,
+            update.effective_chat.id,
+            update.callback_query.message.message_id,
+            delay=5.0,
+        )
     # Check if this came from a text command (/cancel)
     elif update.message:
         await _delete_user_message(update)
@@ -303,7 +320,12 @@ async def cancel_add_product(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Fallback for any other update type
     elif update.effective_message:
         await update.effective_message.reply_text(Strings.Product.CANCELLED)
-        schedule_deletion(context, update.effective_chat.id, update.effective_message.message_id, delay=5.0)
+        schedule_deletion(
+            context,
+            update.effective_chat.id,
+            update.effective_message.message_id,
+            delay=5.0,
+        )
 
     return ConversationHandler.END
 

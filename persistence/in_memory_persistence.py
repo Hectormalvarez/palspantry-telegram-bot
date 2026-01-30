@@ -4,7 +4,6 @@ import logging
 
 from .abstract_persistence import AbstractPantryPersistence
 
-
 logger = logging.getLogger(__name__)
 
 
