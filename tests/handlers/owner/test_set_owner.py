@@ -4,6 +4,7 @@ from telegram import Update, User
 from telegram.ext import ContextTypes
 from handlers.owner import set_owner
 from persistence.abstract_persistence import AbstractPantryPersistence
+from resources.strings import Strings
 
 
 @pytest.mark.asyncio
@@ -25,7 +26,7 @@ async def test_first_user_becomes_owner(
     mock_persistence_layer.is_owner_set.assert_called_once()
     mock_persistence_layer.set_bot_owner.assert_called_once_with(user_id_to_set)
     mock_update_message.message.reply_text.assert_called_once_with(
-        "You are now the owner of this bot."
+        Strings.Owner.SET_SUCCESS
     )
 
 
@@ -49,7 +50,7 @@ async def test_set_owner_command_handles_owner_already_set(
     mock_persistence_layer.get_bot_owner.assert_called_once()
     mock_persistence_layer.set_bot_owner.assert_not_called()
     mock_update_message.message.reply_text.assert_called_once_with(
-        "An owner has already been set."
+        Strings.Owner.ALREADY_SET
     )
 
 
@@ -76,7 +77,7 @@ async def test_set_owner_command_allows_first_user_and_rejects_second(
     mock_persistence_layer.is_owner_set.assert_called_once()
     mock_persistence_layer.set_bot_owner.assert_called_once_with(user1_id)
     mock_update_message.message.reply_text.assert_called_once_with(
-        "You are now the owner of this bot."
+        Strings.Owner.SET_SUCCESS
     )
 
     # --- Second User Attempt ---
@@ -97,5 +98,5 @@ async def test_set_owner_command_allows_first_user_and_rejects_second(
         mock_persistence_layer.set_bot_owner.call_count == 1
     )  # Still only called once in total
     mock_update_message.message.reply_text.assert_called_once_with(
-        "An owner has already been set."
+        Strings.Owner.ALREADY_SET
     )

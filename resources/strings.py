@@ -33,6 +33,52 @@ class Strings:
     class Error:
         UNKNOWN_COMMAND = "Sorry, I didn't understand that. Please use /start to begin or /shop to browse the menu."
 
+    class Owner:
+        SET_SUCCESS = "You are now the owner of this bot."
+        SET_FAILED = "Could not set owner at this time. An owner might already be registered."
+        ALREADY_SET = "An owner has already been set."
+        NOT_OWNER = "Sorry, this command is only for the bot owner."
+
+    class Product:
+        # Conversation Prompts
+        START_ADD = "Let's add a new product! First, what is the product's name?"
+        ASK_DESCRIPTION = "Name set to '{name}'.\n\nNow, please enter a description."
+        ASK_PRICE = "Description noted.\n\nNow, what's the price? (e.g., 10.99 or 5)"
+        ASK_QUANTITY = "Price set to ${price:.2f}.\n\nHow many units are available? (e.g., 10)"
+        ASK_CATEGORY = "Quantity set to {qty}.\n\nNow, please specify a category (e.g. 'Dairy')."
+        ASK_IMAGE = "Category set.\n\nFinally, please send a photo of the product.\nOr type /skip if you don't want to add an image."
+        NO_IMAGE_ADDED = "No image added."
+        
+        # Errors & Validation
+        ERR_EMPTY_NAME = "Product name cannot be empty. Please enter a name, or /cancel."
+        ERR_EMPTY_DESC = "Description cannot be empty. Please enter a description, or /cancel."
+        ERR_INVALID_PRICE = "Invalid price. Please enter a positive number (e.g. 10.99), or /cancel."
+        ERR_INVALID_QTY = "Invalid quantity. Please enter a whole positive number, or /cancel."
+        ERR_EMPTY_CATEGORY = "Category cannot be empty. Please enter a category, or /cancel."
+        ERR_DATA_LOST = "Error: Data lost. Please try again."
+        ERR_DB_SAVE = "❌ Database error. Could not save."
+        
+        # Results
+        CANCELLED = "Product addition cancelled."
+        SUCCESS_ADDED = "✅ Product '{name}' added!"
+        
+        # Buttons
+        BTN_CONFIRM = "✅ Confirm & Save"
+        BTN_CANCEL = "❌ Cancel"
+
+        @staticmethod
+        def confirm_summary(name: str, desc: str, price: float, qty: int, cat: str, has_image: bool) -> str:
+            return (
+                "<b>Confirm New Product:</b>\n\n"
+                f"<b>Name:</b> {name}\n"
+                f"<b>Desc:</b> {desc}\n"
+                f"<b>Price:</b> ${price:.2f}\n"
+                f"<b>Qty:</b> {qty}\n"
+                f"<b>Cat:</b> {cat}\n"
+                f"<b>Image:</b> {'Yes' if has_image else 'No'}\n\n"
+                "Save this product?"
+            )
+
     class Shop:
         EMPTY = "The shop is currently empty. Please check back later!"
         CATEGORY_HEADER = "Welcome to PalsPantry! Select a category:"
