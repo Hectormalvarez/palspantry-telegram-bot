@@ -6,6 +6,7 @@ Verification script for PalPantry Telegram Bot environment and API connectivity.
 import os
 import sys
 import sqlite3
+import redis
 from typing import Tuple
 
 try:
@@ -79,6 +80,45 @@ def check_sqlite_database() -> Tuple[bool, str]:
         return False, f"Unexpected error: {str(e)}"
 
 
+def check_redis_cache() -> Tuple[bool, str]:
+    """Check Redis cache connectivity and basic operations."""
+    try:
+        load_dotenv()
+        redis_host = os.getenv('REDIS_HOST', 'localhost')
+        redis_port = int(os.getenv('REDIS_PORT', 6379))
+        
+        # Create Redis connection
+        r = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
+        
+        # Test ping
+        r.ping()
+        
+        # Test basic operations with a temporary key
+        test_key = "healthcheck"
+        test_value = "ok"
+        
+        # Set and get the test key
+        r.set(test_key, test_value)
+        retrieved_value = r.get(test_key)
+        
+        # Clean up the test key
+        r.delete(test_key)
+        
+        if retrieved_value == test_value:
+            return True, "Redis connection successful"
+        else:
+            return False, "Redis data integrity check failed"
+            
+    except redis.ConnectionError as e:
+        return False, f"Redis connection failed: {str(e)}"
+    except redis.TimeoutError as e:
+        return False, f"Redis timeout: {str(e)}"
+    except redis.AuthenticationError as e:
+        return False, f"Redis authentication failed: {str(e)}"
+    except Exception as e:
+        return False, f"Redis error: {str(e)}"
+
+
 def main():
     """Main verification function."""
     print("PalPantry Bot Verification")
@@ -112,6 +152,15 @@ def main():
     
     # Exit with code 1 if database check fails
     if not db_ok:
+        sys.exit(1)
+    
+    # Check 4: Redis Cache
+    redis_ok, redis_msg = check_redis_cache()
+    redis_status = "PASS" if redis_ok else "FAIL"
+    print(f"[REDIS] Redis Cache: {redis_status} ({redis_msg})")
+    
+    # Exit with code 1 if Redis check fails
+    if not redis_ok:
         sys.exit(1)
     
     print("\nAll checks passed! ✅")
