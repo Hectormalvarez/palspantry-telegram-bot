@@ -124,10 +124,10 @@ def check_postgres_database() -> Tuple[bool, str]:
     """Check PostgreSQL database connectivity and basic operations."""
     try:
         load_dotenv()
-        db_host = os.getenv('DB_HOST', 'localhost')
-        db_name = os.getenv('DB_NAME', 'palspantry')
-        db_user = os.getenv('DB_USER', 'postgres')
-        db_pass = os.getenv('DB_PASS', '')
+        db_host = os.getenv('DB_HOST', 'db')
+        db_name = os.getenv('DB_NAME', 'pantry_db')
+        db_user = os.getenv('DB_USER', 'pantry_user')
+        db_pass = os.getenv('DB_PASS', 'pantry_pass')
         
         # Create PostgreSQL connection
         conn = psycopg2.connect(
