@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    env_file: .env
+    volumes:
+      - .:/app
+    networks:
+      - pantry-network
+
+networks:
+  pantry-network:
+    driver: bridge
