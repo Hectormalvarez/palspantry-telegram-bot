@@ -64,4 +64,4 @@
 | `order_id` | TEXT | FK -> orders.id |
 | `product_id` | TEXT | FK -> products.id |
 | `quantity` | INTEGER | |
-| `unit_price` | REAL | Price at moment of purchase (Float) |
+| `unit_price_cents` | INTEGER | Price at moment of purchase (Cents) |

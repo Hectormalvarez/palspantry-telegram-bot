@@ -1,8 +1,8 @@
 ## 1. Active Milestone
-**Phase 1.5: Clean Architecture Refactor (Service Isolation)**
-* **Goal:** Refactor codebase to isolate services and improve maintainability.
+**Phase 2: Service Integration**
+* **Goal:** Integrate Django backend with Telegram bot and implement decoupled service architecture.
 * **Status:** In Progress
-* **Context:** Moving from monolithic structure to clean architecture with proper service separation.
+* **Context:** Moving from isolated services to integrated system with proper API communication.
 
 ## 2. Recent Achievements
 * **(Phase 0)** Completed Infrastructure Verification Utility: All checks (ENV, TG, DB, REDIS, PG) are PASSING in Docker.
@@ -28,6 +28,14 @@
 - [x] **C1.4:** Implement health checks and service dependencies
 
 ### Phase 1.5: Clean Architecture Refactor (Service Isolation)
-- [ ] **C1.5.1:** Create dedicated bot directory structure
-- [ ] **C1.5.2:** Fix import paths and module references
-- [ ] **C1.5.3:** Update Docker configuration for new structure
+- [x] **C1.5.1:** Create dedicated bot directory structure
+- [x] **C1.5.2:** Fix import paths and module references
+- [x] **C1.5.3:** Update Docker configuration for new structure
+
+### Phase 2: Service Integration
+- [ ] **C2.1:** Align Django Models with Schema (Integer Cents & Cart Models)
+- [ ] **C2.2:** Implement Complete REST API Endpoints for all entities
+- [ ] **C2.3:** Update Bot to Use Django API instead of SQLite
+- [ ] **C2.4:** Add Authentication and Error Handling for API calls
+- [ ] **C2.5:** Implement Redis Caching for API responses
+- [ ] **C2.6:** Add Service Health Checks and Monitoring

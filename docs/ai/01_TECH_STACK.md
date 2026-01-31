@@ -8,7 +8,7 @@
 * **Target Stack (Phase 0+):**
     * **Django 5.x:** REST API backend for business logic
     * **PostgreSQL 16:** Primary production database
-    * **Redis 7:** Caching and session management
+    * **Redis 7:** Caching API responses and handling session state
     * **Docker:** Containerization for consistent environments
 
 ## 2. Architectural Patterns
