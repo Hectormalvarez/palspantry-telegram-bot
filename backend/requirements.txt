@@ -4,3 +4,6 @@ redis
 django-redis
 python-dotenv
 djangorestframework
+pytest
+pytest-django
+pytest-env
