@@ -2,3 +2,4 @@ python-telegram-bot[job-queue]
 python-dotenv
 redis
 psycopg2-binary
+requests
