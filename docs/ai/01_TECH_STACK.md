@@ -21,8 +21,8 @@
         * Short-term UI state (e.g., conversation steps): `context.user_data`.
         * Long-term data (Carts, Orders, Inventory): MUST be persisted to SQLite.
 
-* **Target Architecture (Phase 0+):** Decoupled Service-Based Model
-    * **Bot Service:** Telegram bot as independent service
+* **Target Architecture (Phase 0+):** Distributed Service-Based Model
+    * **Bot Service:** Telegram bot acts as a thin client to the Django REST API
     * **Django API Service:** RESTful backend for business logic
     * **Database Service:** PostgreSQL for persistent storage
     * **Cache Service:** Redis for performance optimization
@@ -32,10 +32,34 @@
 ## 3. Coding Standards
 * **Formatting:** Follow `black` and `pylint` configurations present in the repo.
 * **Type Hinting:** Required for all function signatures. Use `typing` module (e.g., `list[dict[str, Any]]`).
-* **No ORMs:** Do not introduce SQLAlchemy or Django ORM. Write raw, parameterized SQL queries for simplicity and performance.
+* **Django ORM:** Django ORM is the standard for the backend/ service to manage PostgreSQL data.
+* **Raw SQL:** Raw SQL is permitted only within the legacy SQLite persistence layer of the bot/ service.
+* **Git Standards:** All future work MUST adhere to the Conventional Commits standard defined in the Git Standards & Workflow section.
 * **Context Hygiene:**
     * `docs/ai/03_CURRENT_STATE.md` MUST be updated at the end of every significant feature or session.
     * Do not leave the state as "Working on X" if X was completed.
+
+## 4. Git Standards & Workflow
+* **Commit Message Format:** MUST follow Conventional Commits specification.
+* **Schema:** `<type>(<scope>): <subject>`
+* **Allowed Types:**
+    - `feat`: New features
+    - `fix`: Bug fixes
+    - `docs`: Documentation changes
+    - `style`: Code style changes (formatting, etc.)
+    - `refactor`: Code refactoring
+    - `test`: Test-related changes
+    - `infra`: Infrastructure changes (CI/CD, Docker, etc.)
+* **Commit Message Rules:**
+    - All messages MUST be in lowercase
+    - Use present tense (e.g., "add" not "added")
+    - No trailing period at the end
+    - Scope is optional but recommended for clarity
+* **Examples:**
+    - `feat(cart): add item to shopping cart`
+    - `fix(telegram): handle message parsing errors`
+    - `docs: update API documentation`
+    - `refactor: simplify database connection logic`
 
 ## 4. Documentation & Comments
 * **Docstring Style:** MUST use **Google Style** docstrings for all functions and classes.
