@@ -13,6 +13,8 @@
 * **(v0.2.0)** Implemented Atomic Order Creation in SQLite (`create_order`).
 * **(v0.2.0)** Implemented Checkout flow: Cart -> Order -> Receipt -> Owner Notification.
 * **(v0.3.0)** Refactored `bot_main.py` to use Domain-Based Handler Registration (Scalable Architecture).
+* **(C2.2)** Initial API Setup: Created basic Django REST API endpoints for Products and Orders (Commits: 0fe5919/dda9005).
+* **(C2.1)** Initial Model Registration: Basic Django models created but require schema alignment (Commit: c4a1b36).
 
 ## 3. Current Development State
 ### Phase 0: Infrastructure & Diagnostic Tooling
@@ -32,10 +34,23 @@
 - [x] **C1.5.2:** Fix import paths and module references
 - [x] **C1.5.3:** Update Docker configuration for new structure
 
-### Phase 2: Service Integration
-- [ ] **C2.1:** Align Django Models with Schema (Integer Cents & Cart Models)
+### Phase 2: Service Integration (Distributed Architecture)
+- [ ] **C2.1:** Align Django Models with Schema (Integer Cents & Cart Models) **[BLOCKING - NEEDS REWORK]**
+  - *Current models (c4a1b36) require complete schema realignment*
+  - Must support UUID primary keys, IntegerField for cents, and cart management
 - [ ] **C2.2:** Implement Complete REST API Endpoints for all entities
+  - *Basic endpoints created (0fe5919/dda9005) but need expansion*
 - [ ] **C2.3:** Update Bot to Use Django API instead of SQLite
 - [ ] **C2.4:** Add Authentication and Error Handling for API calls
 - [ ] **C2.5:** Implement Redis Caching for API responses
 - [ ] **C2.6:** Add Service Health Checks and Monitoring
+
+## 4. Blocking Issues
+### Database Schema Mismatch (CRITICAL BLOCKER)
+**Issue:** Django models in `backend/pantry/models.py` do not match the required schema for Phase 2 integration.
+**Impact:** Bot-to-Backend integration is BLOCKED until models support:
+- UUID primary keys for all entities
+- Integer cents pricing (not DecimalField)
+- Complete cart management models
+- Order schema parity with bot's SQLite implementation
+**Status:** High priority - must be resolved before any API integration work
