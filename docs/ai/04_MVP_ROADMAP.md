@@ -33,13 +33,13 @@ This roadmap defines the critical path to a functional "Minimum Viable Product" 
 
 ## Version 0.2.7: Architecture & Maintenance (🚧 In Progress)
 **Focus:** preparing the codebase for scale by decoupling text from logic.
-* [ ] **Centralized Message Registry:** Create a `messages.py` or `resources/strings.py` to hold all static text.
-* [ ] **Refactor Handlers:** Replace hardcoded strings in `handlers/` with references to the registry.
+* [x] **Centralized Message Registry:** Create a `messages.py` or `resources/strings.py` to hold all static text.
+* [x] **Refactor Handlers:** Replace hardcoded strings in `handlers/` with references to the registry.
 
-## Version 0.2.8: Database Parity & Schema Alignment (CRITICAL BLOCKER)
+## Version 0.2.8: Database Parity & Schema Alignment (COMPLETED)
 **Focus:** Align Django models with bot's SQLite schema to enable API integration.
-**Status:** BLOCKING - Must complete before any Phase 2 work
-**Impact:** Bot-to-Backend integration cannot proceed until models support:
+**Status:** COMPLETED - Schema alignment successfully implemented
+**Impact:** Bot-to-Backend integration now possible with:
 - UUID primary keys for all entities (Products, Users, Orders, Carts)
 - Integer cents pricing (replace DecimalField with IntegerField)
 - Complete cart management models (Cart, CartItem)
@@ -47,17 +47,17 @@ This roadmap defines the critical path to a functional "Minimum Viable Product" 
 - Proper foreign key relationships and constraints
 
 **Tasks:**
-* [ ] **Model Schema Alignment:**
+* [x] **Model Schema Alignment:**
     * Update Product model: Add UUID primary key, change price to IntegerField (cents)
     * Update TelegramUser model: Add UUID primary key
     * Update Order model: Add UUID primary key, ensure schema matches bot implementation
     * Add Cart model: User relationship, created_at timestamp
     * Add CartItem model: Cart relationship, Product relationship, quantity field
-* [ ] **Database Migration:**
+* [x] **Database Migration:**
     * Create Django migrations for all schema changes
     * Ensure backward compatibility where possible
     * Test migration on clean database
-* [ ] **Schema Validation:**
+* [x] **Schema Validation:**
     * Verify all field types match bot's SQLite schema exactly
     * Test model relationships and constraints
     * Validate UUID generation and handling
@@ -65,7 +65,7 @@ This roadmap defines the critical path to a functional "Minimum Viable Product" 
 ## Version 0.3: Infrastructure Parity (SERVICE PARITY FOCUS)
 **Focus:** Ensure Django API achieves 100% feature parity with SQLitePersistence layer.
 **Prerequisites:** Complete Version 0.2.8 (Database Parity)
-**Status:** CRITICAL - Foundation for all subsequent API work
+**Status:** ACTIVE - Ready for implementation
 **Definition of Parity:** The Bot should not be able to tell the difference between the old SQLitePersistence and the new APIPersistence.
 
 **Tasks:**

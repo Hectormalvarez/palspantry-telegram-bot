@@ -4,7 +4,7 @@ from .models import Product, TelegramUser, Order
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'stock', 'created_at')
+    list_display = ('name', 'price_cents', 'stock', 'created_at')
     search_fields = ('name',)
 
 

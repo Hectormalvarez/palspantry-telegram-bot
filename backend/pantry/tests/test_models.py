@@ -11,7 +11,7 @@ class TestProductModel(TestCase):
         # Create a product instance
         product = Product.objects.create(
             name="Test Product",
-            price=10.50,
+            price_cents=1050,
             stock=100,
             description="Test description"
         )
@@ -24,13 +24,11 @@ class TestProductModel(TestCase):
         self.assertTrue(hasattr(product, 'price_cents'), 
                        "Product should have price_cents field")
         
-        # Verify price_cents is an integer type
+        # Verify price_cents is an integer type and equals 1050
         self.assertIsInstance(product.price_cents, int, 
                             "Product.price_cents should be an integer")
-        
-        # Verify price_cents exists and is an int (this will cause AttributeError)
-        self.assertIsInstance(product.price_cents, int, 
-                            "Product.price_cents should exist and be an int")
+        self.assertEqual(product.price_cents, 1050,
+                        "Product.price_cents should equal 1050")
 
 
 class TestTelegramUserModel(TestCase):
@@ -87,7 +85,7 @@ class TestOrderModel(TestCase):
         
         product = Product.objects.create(
             name="Test Product",
-            price=10.50,
+            price_cents=1050,
             stock=100
         )
         
