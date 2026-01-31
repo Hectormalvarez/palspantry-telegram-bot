@@ -9,6 +9,17 @@ services:
     networks:
       - pantry-network
 
+  redis:
+    image: redis:7-alpine
+    networks:
+      - pantry-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+
 networks:
   pantry-network:
     driver: bridge
