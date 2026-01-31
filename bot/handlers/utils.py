@@ -1,8 +1,8 @@
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes
-from persistence.abstract_persistence import AbstractPantryPersistence
-from resources.strings import Strings
+from bot.persistence.abstract_persistence import AbstractPantryPersistence
+from bot.resources.strings import Strings
 
 logger = logging.getLogger(__name__)
 

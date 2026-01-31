@@ -18,9 +18,9 @@ from telegram.ext import (
     filters,
     CallbackQueryHandler,
 )
-from persistence.abstract_persistence import AbstractPantryPersistence
-from handlers.utils import owner_only_command, schedule_deletion, _delete_user_message
-from resources.strings import Strings
+from bot.persistence.abstract_persistence import AbstractPantryPersistence
+from bot.handlers.utils import owner_only_command, schedule_deletion, _delete_user_message
+from bot.resources.strings import Strings
 
 logger = logging.getLogger(__name__)
 

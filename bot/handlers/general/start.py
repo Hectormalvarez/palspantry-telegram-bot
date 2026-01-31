@@ -3,9 +3,9 @@ import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
-from handlers.utils import schedule_deletion
-from persistence.abstract_persistence import AbstractPantryPersistence
-from resources.strings import Strings
+from bot.handlers.utils import schedule_deletion
+from bot.persistence.abstract_persistence import AbstractPantryPersistence
+from bot.resources.strings import Strings
 
 logger = logging.getLogger(__name__)
 

@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python requirements files
-COPY requirements.txt requirements-dev.txt ./
+COPY bot/requirements.txt bot/requirements-dev.txt ./
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
@@ -20,4 +20,4 @@ RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
 COPY . .
 
 # Set default command
-CMD ["python", "bot_main.py"]
+CMD ["python", "-m", "bot.bot_main"]

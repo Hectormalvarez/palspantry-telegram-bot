@@ -4,10 +4,10 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMe
 from telegram.ext import CommandHandler, ContextTypes, CallbackQueryHandler
 from telegram.constants import ParseMode
 
-from persistence.abstract_persistence import AbstractPantryPersistence
-from handlers.utils import schedule_deletion
-from handlers.general.start import get_home_menu
-from resources.strings import Strings
+from bot.persistence.abstract_persistence import AbstractPantryPersistence
+from bot.handlers.utils import schedule_deletion
+from bot.handlers.general.start import get_home_menu
+from bot.resources.strings import Strings
 
 logger = logging.getLogger(__name__)
 
