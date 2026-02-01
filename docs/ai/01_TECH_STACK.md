@@ -28,6 +28,7 @@
     * **Cache Service:** Redis for performance optimization
     * **Service Communication:** HTTP REST API calls between services
     * **Container Orchestration:** Docker Compose for local development
+    * **API Persistence Pattern:** Repository pattern implementation with `APIPersistence` class for seamless Django API integration
 
 ## 3. Coding Standards
 * **Formatting:** Follow `black` and `pylint` configurations present in the repo.

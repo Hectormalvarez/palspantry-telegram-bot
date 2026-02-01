@@ -65,7 +65,7 @@ This roadmap defines the critical path to a functional "Minimum Viable Product" 
 ## Version 0.3: Infrastructure Parity (SERVICE PARITY FOCUS)
 **Focus:** Ensure Django API achieves 100% feature parity with SQLitePersistence layer.
 **Prerequisites:** Complete Version 0.2.8 (Database Parity)
-**Status:** ACTIVE - Ready for implementation
+**Status:** ACTIVE - Implementation in progress
 **Definition of Parity:** The Bot should not be able to tell the difference between the old SQLitePersistence and the new APIPersistence.
 
 **Tasks:**
@@ -76,7 +76,12 @@ This roadmap defines the critical path to a functional "Minimum Viable Product" 
 * [x] **B: Internal Secret Auth (shared key in .env):**
     * Implement simple API key authentication using shared secret
     * Add request/response validation middleware
-* [ ] **C: Proper Error handling for 5xx/4xx API responses:**
+* [x] **C: APIPersistence Implementation:**
+    * Create `APIPersistence` class extending `AbstractPantryPersistence`
+    * Implement JSON-to-dictionary transformation for cart management
+    * Add authentication headers to API requests
+    * Verify data structure compatibility with existing handlers
+* [ ] **D: Proper Error handling for 5xx/4xx API responses:**
     * Implement comprehensive error handling for API failures
     * Create graceful degradation when API is unavailable
 

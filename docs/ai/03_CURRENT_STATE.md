@@ -15,6 +15,7 @@
 * **(v0.3.0)** Refactored `bot_main.py` to use Domain-Based Handler Registration (Scalable Architecture).
 * **(C2.2)** Initial API Setup: Created basic Django REST API endpoints for Products and Orders (Commits: 0fe5919/dda9005).
 * **(C2.1)** Initial Model Registration: Basic Django models created but require schema alignment (Commit: c4a1b36).
+* **(C2.4)** Implemented `APIPersistence` with verified JSON-to-Dict transformation for cart management.
 
 ## 3. Current Development State
 ### Phase 0: Infrastructure & Diagnostic Tooling
@@ -45,6 +46,7 @@
   - [x] Order API (Checkout) [COMPLETED]
 - [x] **C2.3:** Secure Endpoints with Internal Secret **[COMPLETED]**
 - [ ] **C2.4:** Update Bot to Use Django API instead of SQLite
+  - *In Progress: APIPersistence class created and GET mapping verified*
 - [ ] **C2.5:** Add Authentication and Error Handling for API calls
 - [ ] **C2.6:** Implement Redis Caching for API responses
 - [ ] **C2.7:** Add Service Health Checks and Monitoring
