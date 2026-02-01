@@ -137,3 +137,13 @@ CACHES = {
 # Session configuration
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
+
+# API Key configuration
+INTERNAL_API_KEY = os.environ.get("INTERNAL_API_KEY", "dev-secret-key")
+
+# REST Framework configuration
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'pantry.permissions.HasInternalAPIKey',
+    ],
+}

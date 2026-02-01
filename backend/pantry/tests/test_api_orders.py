@@ -1,13 +1,16 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
+from django.test import override_settings
 from pantry.models import TelegramUser, Product, CartItem, Order
 
+@override_settings(INTERNAL_API_KEY='test-secret')
 class TestOrderAPI(APITestCase):
     def setUp(self):
         self.user = TelegramUser.objects.create(telegram_id=12345, username="test_user")
         self.product = Product.objects.create(name="Coffee", price_cents=500, stock=10)
         # Add items to cart
         CartItem.objects.create(user=self.user, product=self.product, quantity=2)
+        self.client.credentials(HTTP_X_API_KEY='test-secret')
 
     def test_checkout_flow(self):
         """Test valid checkout: Cart -> Order -> Response -> Cleanup."""
