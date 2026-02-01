@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, TelegramUser, Order
+from .models import Product, TelegramUser, Order, OrderItem
 
 
 @admin.register(Product)
@@ -16,5 +16,11 @@ class TelegramUserAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('user', 'product', 'quantity', 'status', 'created_at')
+    list_display = ('user', 'total_amount_cents', 'status', 'created_at')
     list_filter = ('status', 'created_at')
+
+
+@admin.register(OrderItem)
+class OrderItemAdmin(admin.ModelAdmin):
+    list_display = ('order', 'product', 'quantity', 'unit_price_cents')
+    list_filter = ('order', 'product')

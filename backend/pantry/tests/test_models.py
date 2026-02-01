@@ -92,11 +92,64 @@ class TestOrderModel(TestCase):
         # Create an order instance
         order = Order.objects.create(
             user=user,
-            product=product,
-            quantity=2,
+            total_amount_cents=2100,
             status='pending'
         )
         
         # Verify Order uses UUID for primary identifier
         self.assertIsInstance(order.id, uuid.UUID, 
                             "Order.id should be a UUID instance")
+
+
+class TestOrderArchitecture(TestCase):
+    """Test cases for Order multi-item structure architecture."""
+    
+    def test_order_has_items_relationship(self):
+        """Verify that Order can have a relationship to multiple OrderItem instances."""
+        # Create a TelegramUser and two Products
+        user = TelegramUser.objects.create(
+            telegram_id=123456789,
+            username="testuser",
+            first_name="Test"
+        )
+        
+        product1 = Product.objects.create(
+            name="Product 1",
+            price_cents=1000,
+            stock=10
+        )
+        
+        product2 = Product.objects.create(
+            name="Product 2", 
+            price_cents=2000,
+            stock=20
+        )
+        
+        # Attempt to create an Order without specifying a product (header only)
+        order = Order.objects.create(
+            user=user,
+            status='pending'
+        )
+        
+        # Import OrderItem inside the test method (will fail, which is expected)
+        from pantry.models import OrderItem
+        
+        # Attempt to create two OrderItem instances linking the Order to the Products
+        order_item1 = OrderItem.objects.create(
+            order=order,
+            product=product1,
+            quantity=1,
+            unit_price_cents=1050
+        )
+        
+        order_item2 = OrderItem.objects.create(
+            order=order,
+            product=product2,
+            quantity=2,
+            unit_price_cents=500
+        )
+        
+        # Assert that the Order has a relationship to the items
+        self.assertEqual(order.items.count(), 2)
+        self.assertIn(order_item1, order.items.all())
+        self.assertIn(order_item2, order.items.all())
