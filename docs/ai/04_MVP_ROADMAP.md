@@ -73,7 +73,7 @@ This roadmap defines the critical path to a functional "Minimum Viable Product" 
     * Implement complete CRUD operations for all entities (Products, Users, Orders, Carts, CartItems)
     * Ensure API responses match SQLitePersistence data structures exactly
     * Validate all edge cases and error conditions
-* [ ] **B: Internal Secret Auth (shared key in .env):**
+* [x] **B: Internal Secret Auth (shared key in .env):**
     * Implement simple API key authentication using shared secret
     * Add request/response validation middleware
 * [ ] **C: Proper Error handling for 5xx/4xx API responses:**
