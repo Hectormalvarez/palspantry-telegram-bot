@@ -41,6 +41,8 @@
   - Schema now supports complete cart management and order processing
 - [ ] **C2.2:** Implement Complete REST API Endpoints for all entities
   - *Basic endpoints created (0fe5919/dda9005) but need expansion*
+  - [x] Cart API (Read/Write) [COMPLETED]
+  - [x] Order API (Checkout) [COMPLETED]
 - [ ] **C2.3:** Update Bot to Use Django API instead of SQLite
 - [ ] **C2.4:** Add Authentication and Error Handling for API calls
 - [ ] **C2.5:** Implement Redis Caching for API responses

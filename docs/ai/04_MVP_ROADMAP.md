@@ -69,7 +69,7 @@ This roadmap defines the critical path to a functional "Minimum Viable Product" 
 **Definition of Parity:** The Bot should not be able to tell the difference between the old SQLitePersistence and the new APIPersistence.
 
 **Tasks:**
-* [ ] **A: REST Endpoints (matching SQLite functionality):**
+* [x] **A: REST Endpoints (matching SQLite functionality):**
     * Implement complete CRUD operations for all entities (Products, Users, Orders, Carts, CartItems)
     * Ensure API responses match SQLitePersistence data structures exactly
     * Validate all edge cases and error conditions
